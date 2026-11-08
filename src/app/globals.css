@@ -1,0 +1,182 @@
+@import "tailwindcss";
+
+/*
+ * TenderMed Intelligence design tokens.
+ * Warm white surfaces, deep navy text and dark surfaces, restrained teal
+ * accent. Status colours are always paired with text and an icon.
+ */
+@theme inline {
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-schibsted), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, "SFMono-Regular", monospace;
+}
+
+@theme {
+  --color-canvas: #faf9f6;
+  --color-surface: #ffffff;
+  --color-subtle: #f4f3ef;
+  --color-muted: #ebe9e3;
+  --color-line: #e2e0d8;
+  --color-line-strong: #cbc8bd;
+
+  --color-ink: #0e1a2b;
+  --color-ink-soft: #364357;
+  --color-ink-muted: #586474;
+
+  --color-navy-950: #070f1b;
+  --color-navy-900: #0c1a2c;
+  --color-navy-800: #14253b;
+  --color-navy-700: #20344d;
+  --color-navy-600: #344963;
+  --color-navy-300: #a9b6c7;
+  --color-navy-200: #cdd6e1;
+
+  --color-accent-50: #edf6f4;
+  --color-accent-100: #d3ebe5;
+  --color-accent-200: #a6d5ca;
+  --color-accent-300: #6fb9a9;
+  --color-accent-500: #1f8a7b;
+  --color-accent-600: #13705f;
+  --color-accent-700: #0f5c4f;
+  --color-accent-800: #0c4a40;
+
+  --color-danger-50: #fcf0ed;
+  --color-danger-200: #f1c4b9;
+  --color-danger-700: #a3301b;
+  --color-warning-50: #fcf5e6;
+  --color-warning-200: #edd59c;
+  --color-warning-700: #835400;
+  --color-success-50: #ecf6ef;
+  --color-success-200: #b6dcc2;
+  --color-success-700: #1d6537;
+  --color-info-50: #edf2f9;
+  --color-info-200: #bccde6;
+  --color-info-700: #2b4f80;
+
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+  --radius-2xl: 28px;
+
+  --shadow-card: 0 1px 2px rgb(14 26 43 / 0.04), 0 1px 1px rgb(14 26 43 / 0.02);
+  --shadow-raised: 0 1px 2px rgb(14 26 43 / 0.05), 0 12px 32px -12px rgb(14 26 43 / 0.16);
+  --shadow-overlay: 0 32px 72px -20px rgb(7 15 27 / 0.38);
+
+  --ease-calm: cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+@layer base {
+  html {
+    color-scheme: light;
+    -webkit-text-size-adjust: 100%;
+    scroll-padding-top: 5.5rem;
+  }
+
+  body {
+    background-color: var(--color-canvas);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-feature-settings: "cv11", "ss01";
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background-color: var(--color-accent-100);
+    color: var(--color-navy-900);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-accent-600);
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: smooth;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
+  summary::-webkit-details-marker {
+    display: none;
+  }
+}
+
+@layer components {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .text-pretty {
+    text-wrap: pretty;
+  }
+
+  /* Chevron for native <select> elements (appearance: none). */
+  .select-chevron {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23586474' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.65rem center;
+    background-size: 16px;
+  }
+
+  /* Subtle dotted grid used behind the hero preview. */
+  .bg-grid {
+    background-image: radial-gradient(rgb(14 26 43 / 0.08) 1px, transparent 1px);
+    background-size: 22px 22px;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slide-in-right {
+  from {
+    transform: translateX(24px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes scale-in {
+  from {
+    transform: translate(-50%, -48%) scale(0.98);
+    opacity: 0;
+  }
+  to {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+}
+
+@utility animate-fade-in {
+  animation: fade-in 160ms var(--ease-calm);
+}
+
+@utility animate-slide-in-right {
+  animation: slide-in-right 220ms var(--ease-calm);
+}
+
+@utility animate-scale-in {
+  animation: scale-in 180ms var(--ease-calm);
+}
