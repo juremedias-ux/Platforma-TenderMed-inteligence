@@ -36,21 +36,21 @@ This repository is the **first public release**: a marketing website, an interac
 
 The repository was empty when work started, so these defaults were chosen and are documented here:
 
-| Topic                                   | Assumption                                                                                             |
-| --------------------------------------- | ------------------------------------------------------------------------------------------------------ |
-| Platform name                           | TenderMed Intelligence                                                                                 |
-| Initial market / industry               | Slovenia; medical equipment and healthcare                                                             |
-| Primary audience                        | Healthcare organizations managing equipment and coordinating maintenance                               |
-| Secondary audience                      | Distributors, service providers and manufacturers                                                      |
-| Website language                        | Slovenian (all visitor-facing text). Code, comments and this README are in English.                    |
-| First release                           | Marketing site, interactive demo with fictional data, inquiry forms stored in Supabase                 |
-| Domain, legal entity, contact details   | **Unknown** – kept as `null` placeholders in `src/lib/config/site.ts`; nothing is invented or rendered |
-| Medcore                                 | Separate business; optional footer link only if configured                                             |
-| Customers, partners, certifications, AI | None assumed or claimed                                                                                |
-| Hosting                                 | Vercel (app) + Supabase (database)                                                                     |
-| Analytics / trackers                    | None                                                                                                   |
-| Response-time promise for inquiries     | None (configurable via `siteConfig.inquiryResponseTimeText`)                                           |
-| Marketing consent                       | Optional, unchecked, separate checkbox in the pilot form; consent version recorded                     |
+| Topic                                   | Assumption                                                                                                                            |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| Platform name                           | TenderMed Intelligence                                                                                                                |
+| Initial market / industry               | Slovenia; medical equipment and healthcare                                                                                            |
+| Primary audience                        | Healthcare organizations managing equipment and coordinating maintenance                                                              |
+| Secondary audience                      | Distributors, service providers and manufacturers                                                                                     |
+| Website language                        | Slovenian (all visitor-facing text). Code, comments and this README are in English.                                                   |
+| First release                           | Marketing site, interactive demo with fictional data, inquiry forms stored in Supabase                                                |
+| Domain, legal entity, contact details   | **Unknown** – kept as `null` placeholders in `src/lib/config/site.ts`; nothing is invented or rendered                                |
+| Medcore                                 | Separate business; optional footer link only if configured                                                                            |
+| Customers, partners, certifications, AI | None assumed or claimed                                                                                                               |
+| Hosting                                 | Vercel (app) + Supabase (database)                                                                                                    |
+| Analytics / trackers                    | None                                                                                                                                  |
+| Response-time promise for inquiries     | None (configurable via `siteConfig.inquiryResponseTimeText`)                                                                          |
+| Pilot sign-up                           | E-mail address only (no name, interest area, message or marketing consent); shown at the top of the homepage and in the pilot section |
 
 ## Product scope and non-goals
 
@@ -58,7 +58,7 @@ The repository was empty when work started, so these defaults were chosen and ar
 
 - Premium public website (`/`) with separate messaging for healthcare organizations and distribution partners.
 - Interactive demo (`/demo`) with fictional equipment, service records, recommendations and illustrative tenders. State lives only in browser memory.
-- Working pilot/demo inquiry form and contact form (`/api/demo-request`, `/api/contact`) with server-side validation, honeypot, origin check, body-size limit, durable rate limiting and optional Cloudflare Turnstile.
+- Working e-mail-only pilot sign-up form (top of the homepage and pilot section) and contact form (`/api/demo-request`, `/api/contact`) with server-side validation, honeypot, origin check, body-size limit, durable rate limiting and optional Cloudflare Turnstile.
 - Supabase migrations with RLS, constraints, deduplication and rate limiting.
 - Draft privacy notice (`/zasebnost`) and terms (`/pogoji`), clearly marked as drafts and `noindex`.
 - SEO metadata, sitemap, robots, social image, icons; accessibility and responsive layouts; unit and end-to-end tests.
@@ -219,19 +219,21 @@ No Supabase project was created as part of this work. To connect one:
      npx supabase db push
      ```
 
-   - or the dashboard SQL editor: paste and run `supabase/migrations/20261108120000_inquiries.sql` once.
+   - or the dashboard SQL editor: paste and run each file in `supabase/migrations/` once, in filename order (`20261108120000_inquiries.sql`, then `20261109120000_email_only_pilot_signup.sql`).
 4. **Keep the `public` schema exposed** through the Data API (the default). The route handlers call two RPC functions and insert into `contact_messages` through PostgREST using the secret key.
 5. **Verify persistence** (see [Testing → forms](#testing-the-forms)).
 
-### What the migration creates
+### What the migrations create
 
-| Object                         | Purpose                                                                                                                                                                                                                                                                |
-| ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `demo_requests`                | Pilot/demo inquiries. CHECK constraints mirror validation (name 2–120 chars, normalized e-mail ≤ 254, enumerated interest area, message ≤ 2000, consent fields present only with opt-in). Extra columns `submission_count`, `last_submitted_at` support deduplication. |
-| `contact_messages`             | Contact form messages (message 10–4000 chars).                                                                                                                                                                                                                         |
-| `form_rate_limits`             | Fixed-window counters keyed by an HMAC of IP or e-mail.                                                                                                                                                                                                                |
-| `submit_demo_request(...)`     | Inserts a request or merges it into one with the same e-mail and interest area from the last 24 hours. Returns nothing, so responses never reveal whether an address exists. Marketing consent is recorded when given and never silently withdrawn.                    |
-| `consume_form_rate_limit(...)` | Counts one attempt and returns whether it is within the limit; deletes counters older than one day.                                                                                                                                                                    |
+`20261108120000_inquiries.sql` creates the objects below; `20261109120000_email_only_pilot_signup.sql` makes name and interest area optional for the e-mail-only sign-up and updates `submit_demo_request`. The second migration is backward compatible and can be applied before the new site version is deployed.
+
+| Object                         | Purpose                                                                                                                                                                                                                                                                                                                |
+| ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `demo_requests`                | Pilot sign-ups. Only the e-mail address is collected (normalized, ≤ 254 chars). Columns for name, interest area, message and marketing consent remain from the first migration and are optional; their CHECK constraints apply when a value is present. `submission_count`, `last_submitted_at` support deduplication. |
+| `contact_messages`             | Contact form messages (message 10–4000 chars).                                                                                                                                                                                                                                                                         |
+| `form_rate_limits`             | Fixed-window counters keyed by an HMAC of IP or e-mail.                                                                                                                                                                                                                                                                |
+| `submit_demo_request(...)`     | Inserts a sign-up or merges it into one with the same e-mail (and interest area, if any) from the last 24 hours. Returns nothing, so responses never reveal whether an address exists. A later submission never erases a stored name, message or consent.                                                              |
+| `consume_form_rate_limit(...)` | Counts one attempt and returns whether it is within the limit; deletes counters older than one day.                                                                                                                                                                                                                    |
 
 **Retention of rate-limit data:** counters are deleted opportunistically on every call once they are older than one day. If forms receive no traffic for long periods, an optional `pg_cron` job can purge them on a schedule:
 
@@ -362,7 +364,7 @@ Without `NEXT_PUBLIC_SITE_URL`, Next.js resolves the social image URL against Ve
 
 Editorial rules: describe demo functionality as demo ("V demonstraciji si oglejte …"), future functionality as planned ("Predvidena funkcionalnost …"), never use "Na voljo" for demo-only modules, prefer "izdelek" over "produkt", and use `pluralSl()` from `src/lib/utils/plural.ts` for counts.
 
-When the privacy notice or marketing consent text changes, bump `privacyNoticeVersion` / `marketingConsentVersion` in `src/lib/config/site.ts`; the version is stored with each inquiry.
+When the privacy notice changes, bump `privacyNoticeVersion` in `src/lib/config/site.ts`; the version is stored with each inquiry.
 
 ## Adding a platform module
 

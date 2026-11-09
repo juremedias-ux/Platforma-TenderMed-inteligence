@@ -1,10 +1,4 @@
-import type {
-  InputHTMLAttributes,
-  LabelHTMLAttributes,
-  ReactNode,
-  SelectHTMLAttributes,
-  TextareaHTMLAttributes,
-} from "react";
+import type { ComponentProps, LabelHTMLAttributes, ReactNode } from "react";
 import { AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 
@@ -26,11 +20,11 @@ export function Label({ className, children, ...props }: LabelHTMLAttributes<HTM
   );
 }
 
-export function Input({ className, ...props }: InputHTMLAttributes<HTMLInputElement>) {
+export function Input({ className, ...props }: ComponentProps<"input">) {
   return <input className={cn(controlBase, "h-11 border-line-strong px-3.5", className)} {...props} />;
 }
 
-export function Textarea({ className, ...props }: TextareaHTMLAttributes<HTMLTextAreaElement>) {
+export function Textarea({ className, ...props }: ComponentProps<"textarea">) {
   return (
     <textarea
       className={cn(controlBase, "min-h-28 resize-y border-line-strong px-3.5 py-3 leading-relaxed", className)}
@@ -39,7 +33,7 @@ export function Textarea({ className, ...props }: TextareaHTMLAttributes<HTMLTex
   );
 }
 
-export function Select({ className, children, ...props }: SelectHTMLAttributes<HTMLSelectElement>) {
+export function Select({ className, children, ...props }: ComponentProps<"select">) {
   return (
     <select
       className={cn(

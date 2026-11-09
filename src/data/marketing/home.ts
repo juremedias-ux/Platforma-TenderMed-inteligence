@@ -11,7 +11,7 @@ export const hero = {
   title: "Vaša oprema, servisi in nove priložnosti. Na enem mestu.",
   text: "Razvijamo platformo, ki povezuje evidenco medicinske opreme, načrtovanje servisov in pregled dokumentacije. Na podlagi potreb vaše ustanove bo pomagala tudi pri raziskovanju ustreznih nadgradenj in novih rešitev.",
   primaryCta: "Oglejte si demo",
-  secondaryCta: "Prijavite interes za pilot",
+  signupTitle: "Prijavite interes za pilot",
   status: "Platforma je v razvoju. Demo prikazuje predvidene delovne tokove z izmišljenimi podatki.",
 };
 
@@ -256,11 +256,11 @@ export const serviceModels = {
 export const pilot = {
   eyebrow: "Pilot",
   title: "Sodelujte pri razvoju platforme",
-  text: "Iščemo ustanove in partnerje, ki želijo poenostaviti evidenco opreme, servisno usklajevanje in načrtovanje prihodnjih potreb. Sporočite nam, kateri del vašega procesa predstavlja največji izziv.",
+  text: "Iščemo ustanove in partnerje, ki želijo poenostaviti evidenco opreme, servisno usklajevanje in načrtovanje prihodnjih potreb. Pustite svoj e-poštni naslov, da vas lahko kontaktiramo glede možnosti vključitve v pilot.",
   sideTitle: "Kaj pomeni prijava interesa",
   sidePoints: [
     "Prijava ni obvezujoča in ne vključuje naročila ali plačila.",
-    "Vaše povpraševanje uporabimo samo za odgovor in morebiten dogovor o predstavitvi.",
+    "Vaš e-poštni naslov uporabimo samo za odgovor in morebiten dogovor o predstavitvi.",
     "Pogoji, obseg in časovnica pilota še niso določeni.",
   ],
 } as const;

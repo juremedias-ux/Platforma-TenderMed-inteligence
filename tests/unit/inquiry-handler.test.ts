@@ -77,11 +77,7 @@ function deps(
 }
 
 const validDemoRequest = {
-  fullName: "  Ana   Novak ",
   email: " Ana.Novak@Example.COM ",
-  interestArea: "service_coordination",
-  message: "",
-  marketingOptIn: false,
   website: "",
 };
 
@@ -94,28 +90,24 @@ describe("inquiry handler – success paths", () => {
     expect(response.headers.get("cache-control")).toBe("no-store");
     expect(backend.demoRequests).toEqual([
       {
-        fullName: "Ana Novak",
         email: "ana.novak@example.com",
-        interestArea: "service_coordination",
-        message: null,
-        marketingOptIn: false,
-        consentVersion: null,
         privacyNoticeVersion: siteConfig.privacyNoticeVersion,
         source: DEMO_REQUEST_SOURCE,
       },
     ]);
   });
 
-  it("records the consent version only when marketing consent is given", async () => {
+  it("stores only the e-mail address even if other fields are sent", async () => {
     const backend = memoryBackend();
     await handleInquiry(
-      makeRequest({ ...validDemoRequest, marketingOptIn: true }),
+      makeRequest({ ...validDemoRequest, fullName: "Ana Novak", message: "Besedilo", marketingOptIn: true }),
       demoRequestDefinition,
       deps(backend),
     );
-    expect(backend.demoRequests[0]).toMatchObject({
-      marketingOptIn: true,
-      consentVersion: siteConfig.marketingConsentVersion,
+    expect(backend.demoRequests[0]).toEqual({
+      email: "ana.novak@example.com",
+      privacyNoticeVersion: siteConfig.privacyNoticeVersion,
+      source: DEMO_REQUEST_SOURCE,
     });
   });
 
@@ -158,24 +150,17 @@ describe("inquiry handler – honest failures", () => {
     expect(response.status).toBe(500);
     expect(await response.json()).toEqual({ ok: false, code: "persistence_failed" });
     const logged = JSON.stringify(vi.mocked(dependencies.logger!.error).mock.calls);
-    expect(logged).not.toContain("ana.novak");
-    expect(logged).not.toContain("Novak");
+    expect(logged.toLowerCase()).not.toContain("ana.novak");
   });
 
   it("returns field errors in Slovenian for invalid input", async () => {
     const backend = memoryBackend();
-    const response = await handleInquiry(
-      makeRequest({ fullName: "A", email: "ni-email", interestArea: "x" }),
-      demoRequestDefinition,
-      deps(backend),
-    );
+    const response = await handleInquiry(makeRequest({ email: "ni-email" }), demoRequestDefinition, deps(backend));
     expect(response.status).toBe(422);
     const body = await response.json();
     expect(body.code).toBe("validation_failed");
-    expect(body.fieldErrors).toMatchObject({
-      fullName: "Vpišite ime in priimek.",
+    expect(body.fieldErrors).toEqual({
       email: "Vpišite veljaven e-poštni naslov, npr. ime@organizacija.si.",
-      interestArea: "Izberite, kaj vas najbolj zanima.",
     });
     expect(backend.repository.saveDemoRequest).not.toHaveBeenCalled();
   });

@@ -62,9 +62,8 @@ export const siteConfig = {
   /** Configurable response-time promise for inquiries. Null = no promise is shown. */
   inquiryResponseTimeText: null as string | null,
 
-  /** Versions recorded with each inquiry (update when the texts change). */
-  privacyNoticeVersion: "2026-11-osnutek-1",
-  marketingConsentVersion: "2026-11-v1",
+  /** Privacy notice version recorded with each inquiry (update when the text changes). */
+  privacyNoticeVersion: "2026-11-osnutek-2",
 } as const;
 
 export type SiteConfig = typeof siteConfig;

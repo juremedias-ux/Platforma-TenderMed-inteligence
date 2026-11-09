@@ -63,12 +63,7 @@ export const demoRequestDefinition: InquiryDefinition<typeof demoRequestSchema> 
   ],
   persist: (repository, data: DemoRequestData) =>
     repository.saveDemoRequest({
-      fullName: data.fullName,
       email: data.email,
-      interestArea: data.interestArea,
-      message: data.message,
-      marketingOptIn: data.marketingOptIn,
-      consentVersion: data.marketingOptIn ? siteConfig.marketingConsentVersion : null,
       privacyNoticeVersion: siteConfig.privacyNoticeVersion,
       source: DEMO_REQUEST_SOURCE,
     }),

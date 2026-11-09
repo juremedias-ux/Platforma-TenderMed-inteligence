@@ -20,13 +20,15 @@ import {
 function createRepository(client: SupabaseClient): InquiryRepository {
   return {
     async saveDemoRequest(record: DemoRequestRecord) {
+      // Name, interest area, message and marketing consent are no longer
+      // collected; the database columns remain for backward compatibility.
       const { error } = await client.rpc("submit_demo_request", {
-        p_full_name: record.fullName,
+        p_full_name: null,
         p_email: record.email,
-        p_interest_area: record.interestArea,
-        p_message: record.message,
-        p_marketing_opt_in: record.marketingOptIn,
-        p_consent_version: record.consentVersion,
+        p_interest_area: null,
+        p_message: null,
+        p_marketing_opt_in: false,
+        p_consent_version: null,
         p_privacy_notice_version: record.privacyNoticeVersion,
         p_source: record.source,
       });

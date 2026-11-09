@@ -1,6 +1,7 @@
 import { ArrowRight, Info } from "lucide-react";
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
+import { PilotSignupForm } from "@/components/forms/pilot-signup-form";
 import { Container } from "@/components/ui/container";
 import { hero } from "@/data/marketing/home";
 import { primaryActions } from "@/data/marketing/navigation";
@@ -26,13 +27,14 @@ export async function Hero() {
             {hero.title}
           </h1>
           <p className="mt-6 text-lg leading-relaxed text-pretty text-ink-soft">{hero.text}</p>
-          <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-            <Link href={primaryActions.demo.href} className={buttonVariants({ variant: "primary", size: "lg" })}>
+          <div id="prijava" className="mt-9 rounded-xl border border-line bg-surface p-4 shadow-card sm:p-5">
+            <p className="text-base font-semibold text-ink">{hero.signupTitle}</p>
+            <PilotSignupForm className="mt-3" />
+          </div>
+          <div className="mt-5">
+            <Link href={primaryActions.demo.href} className={buttonVariants({ variant: "secondary", size: "lg" })}>
               {hero.primaryCta}
               <ArrowRight aria-hidden="true" />
-            </Link>
-            <Link href={primaryActions.pilot.href} className={buttonVariants({ variant: "secondary", size: "lg" })}>
-              {hero.secondaryCta}
             </Link>
           </div>
           <p className="mt-6 flex max-w-md items-start gap-2 text-sm leading-relaxed text-ink-muted">

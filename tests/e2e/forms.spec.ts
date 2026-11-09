@@ -1,41 +1,42 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
-async function fillPilotForm(page: Page) {
-  const form = page.locator("#pilot");
-  await form.getByLabel("Ime in priimek").fill("Ana Novak");
-  await form.getByLabel("E-poštni naslov").fill("ana.novak@example.com");
-  await form.getByLabel("Servisi in usklajevanje").check();
-  await form.getByLabel(/Kateri izziv želite rešiti/).fill("Usklajevanje servisnih terminov med oddelki.");
-  return form;
-}
+const SUCCESS = "Hvala za vaše zanimanje. Vaše povpraševanje smo prejeli.";
 
-test.describe("pilot inquiry form", () => {
-  test("shows Slovenian validation errors, focuses the first invalid field and sends nothing", async ({ page }) => {
+test.describe("pilot sign-up form (e-mail only)", () => {
+  test("is available at the top of the homepage with a single e-mail field", async ({ page }) => {
+    await page.goto("/");
+    const hero = page.locator("#prijava");
+    await expect(hero.getByText("Prijavite interes za pilot")).toBeVisible();
+    await expect(hero.getByLabel("E-poštni naslov")).toBeVisible();
+    await expect(hero.getByRole("button", { name: "Prijavite interes" })).toBeVisible();
+    // Only the e-mail field is visible; the honeypot is hidden from users and assistive technology.
+    await expect(hero.getByRole("textbox")).toHaveCount(1);
+    await expect(hero.getByRole("radio")).toHaveCount(0);
+    await expect(hero.getByRole("checkbox")).toHaveCount(0);
+    await expect(hero.getByRole("link", { name: "izjavi o zasebnosti" })).toHaveAttribute("href", "/zasebnost");
+
+    const section = page.locator("#pilot");
+    await expect(section.getByRole("textbox")).toHaveCount(1);
+    await expect(section.getByLabel("E-poštni naslov")).toBeVisible();
+  });
+
+  test("shows a Slovenian validation error, focuses the field and sends nothing", async ({ page }) => {
     let requests = 0;
     await page.route("**/api/demo-request", (route) => {
       requests += 1;
       return route.fulfill({ status: 201, json: { ok: true } });
     });
-    await page.goto("/#pilot");
-    const form = page.locator("#pilot");
-    await form.getByRole("button", { name: "Pošlji povpraševanje" }).click();
-
-    await expect(form.getByText("Vpišite ime in priimek.")).toBeVisible();
+    await page.goto("/");
+    const form = page.locator("#prijava");
+    await form.getByRole("button", { name: "Prijavite interes" }).click();
     await expect(form.getByText("Vpišite e-poštni naslov.")).toBeVisible();
-    await expect(form.getByText("Izberite, kaj vas najbolj zanima.")).toBeVisible();
-    await expect(form.getByLabel("Ime in priimek")).toBeFocused();
-    await expect(form.getByLabel("Ime in priimek")).toHaveAttribute("aria-invalid", "true");
-    expect(requests).toBe(0);
-  });
+    await expect(form.getByLabel("E-poštni naslov")).toBeFocused();
+    await expect(form.getByLabel("E-poštni naslov")).toHaveAttribute("aria-invalid", "true");
 
-  test("displays the sensitive-data notice and keeps marketing consent unchecked", async ({ page }) => {
-    await page.goto("/#pilot");
-    const form = page.locator("#pilot");
-    await expect(
-      form.getByText("V obrazec ne vpisujte zdravstvenih podatkov pacientov ali drugih občutljivih informacij."),
-    ).toBeVisible();
-    await expect(form.getByRole("checkbox", { name: /obvestila o razvoju/ })).not.toBeChecked();
-    await expect(form.getByRole("link", { name: "izjavi o zasebnosti" })).toHaveAttribute("href", "/zasebnost");
+    await form.getByLabel("E-poštni naslov").fill("ni-email");
+    await form.getByRole("button", { name: "Prijavite interes" }).click();
+    await expect(form.getByText("Vpišite veljaven e-poštni naslov, npr. ime@organizacija.si.")).toBeVisible();
+    expect(requests).toBe(0);
   });
 
   test("submits once despite repeated clicks and shows success only after confirmation", async ({ page }) => {
@@ -45,11 +46,10 @@ test.describe("pilot inquiry form", () => {
       await new Promise((resolve) => setTimeout(resolve, 600));
       await route.fulfill({ status: 201, json: { ok: true } });
     });
-    await page.goto("/#pilot");
-    const form = await fillPilotForm(page);
-    const submit = form.getByRole("button", { name: "Pošlji povpraševanje" });
-    await submit.click();
-    // Further clicks during submission must not create additional requests.
+    await page.goto("/");
+    const form = page.locator("#prijava");
+    await form.getByLabel("E-poštni naslov").fill("ana.novak@example.com");
+    await form.getByRole("button", { name: "Prijavite interes" }).click();
     await form
       .locator("button[type=submit]")
       .click({ force: true, noWaitAfter: true })
@@ -60,43 +60,39 @@ test.describe("pilot inquiry form", () => {
       .catch(() => undefined);
     await expect(form.getByRole("button", { name: /Pošiljanje/ })).toBeDisabled();
 
-    await expect(form.getByText("Hvala za vaše zanimanje. Vaše povpraševanje smo prejeli.")).toBeVisible();
+    await expect(form.getByText(SUCCESS)).toBeVisible();
     expect(bodies).toHaveLength(1);
-    expect(bodies[0]).toMatchObject({
-      fullName: "Ana Novak",
-      email: "ana.novak@example.com",
-      interestArea: "service_coordination",
-      marketingOptIn: false,
-      website: "",
-    });
+    expect(bodies[0]).toEqual({ email: "ana.novak@example.com", website: "", turnstileToken: "" });
   });
 
-  test("reports the unavailable state honestly when storage is not configured and keeps inputs", async ({ page }) => {
+  test("reports the unavailable state honestly when storage is not configured and keeps the input", async ({
+    page,
+  }) => {
     // The e2e web server runs without Supabase credentials, so the real endpoint returns 503.
     await page.goto("/#pilot");
-    const form = await fillPilotForm(page);
-    await form.getByRole("button", { name: "Pošlji povpraševanje" }).click();
+    const form = page.locator("#pilot");
+    await form.getByLabel("E-poštni naslov").fill("ana.novak@example.com");
+    await form.getByRole("button", { name: "Prijavite interes" }).click();
 
-    const alert = form.getByRole("alert");
-    await expect(alert).toContainText(
+    await expect(form.getByRole("alert")).toContainText(
       "Pošiljanje obrazcev trenutno ni na voljo, zato vaše sporočilo ni bilo shranjeno.",
     );
-    await expect(form.getByText("Vaše povpraševanje smo prejeli.")).toHaveCount(0);
-    await expect(form.getByLabel("Ime in priimek")).toHaveValue("Ana Novak");
+    await expect(form.getByText(SUCCESS)).toHaveCount(0);
     await expect(form.getByLabel("E-poštni naslov")).toHaveValue("ana.novak@example.com");
-    await expect(form.getByRole("button", { name: "Pošlji povpraševanje" })).toBeEnabled();
+    await expect(form.getByRole("button", { name: "Prijavite interes" })).toBeEnabled();
   });
 
   test("shows a retryable network error", async ({ page }) => {
     await page.route("**/api/demo-request", (route) => route.abort("failed"));
-    await page.goto("/#pilot");
-    const form = await fillPilotForm(page);
-    await form.getByRole("button", { name: "Pošlji povpraševanje" }).click();
+    await page.goto("/");
+    const form = page.locator("#prijava");
+    await form.getByLabel("E-poštni naslov").fill("ana.novak@example.com");
+    await form.getByRole("button", { name: "Prijavite interes" }).click();
     await expect(form.getByRole("alert")).toContainText("Povezava s strežnikom ni uspela");
     await page.unroute("**/api/demo-request");
     await page.route("**/api/demo-request", (route) => route.fulfill({ status: 201, json: { ok: true } }));
-    await form.getByRole("button", { name: "Pošlji povpraševanje" }).click();
-    await expect(form.getByText("Hvala za vaše zanimanje. Vaše povpraševanje smo prejeli.")).toBeVisible();
+    await form.getByRole("button", { name: "Prijavite interes" }).click();
+    await expect(form.getByText(SUCCESS)).toBeVisible();
   });
 });
 

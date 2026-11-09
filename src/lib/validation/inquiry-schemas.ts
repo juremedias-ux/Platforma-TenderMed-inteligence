@@ -10,30 +10,9 @@ export const LIMITS = {
   fullNameMin: 2,
   fullNameMax: 120,
   emailMax: 254,
-  demoMessageMax: 2000,
   contactMessageMin: 10,
   contactMessageMax: 4000,
 } as const;
-
-export const interestAreas = [
-  "equipment_register",
-  "service_coordination",
-  "solution_recommendations",
-  "tenders_sales_opportunities",
-  "partnership",
-  "full_presentation",
-] as const;
-
-export type InterestArea = (typeof interestAreas)[number];
-
-export const interestAreaLabels: Record<InterestArea, string> = {
-  equipment_register: "Evidenca opreme",
-  service_coordination: "Servisi in usklajevanje",
-  solution_recommendations: "Priporočila novih rešitev",
-  tenders_sales_opportunities: "Razpisi in prodajne priložnosti",
-  partnership: "Partnersko sodelovanje",
-  full_presentation: "Celovita predstavitev",
-};
 
 /** Collapses internal whitespace and trims; keeps line breaks in messages. */
 function cleanSingleLine(value: string): string {
@@ -93,16 +72,9 @@ function message(options: { min: number; max: number; requiredError?: string }) 
     );
 }
 
+/** Pilot sign-up: only an e-mail address is collected. */
 export const demoRequestSchema = z.object({
-  fullName,
   email,
-  interestArea: z.enum(interestAreas, { error: "Izberite, kaj vas najbolj zanima." }),
-  // Optional: empty or whitespace-only input is stored as null.
-  message: message({ min: 0, max: LIMITS.demoMessageMax })
-    .nullable()
-    .optional()
-    .transform((v) => (v ? v : null)),
-  marketingOptIn: z.boolean().optional().default(false),
 });
 
 export const contactMessageSchema = z.object({

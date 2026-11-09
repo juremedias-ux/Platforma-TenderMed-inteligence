@@ -2,10 +2,11 @@
 
 import { CircleAlert, CircleCheck, LoaderCircle, ShieldAlert } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { HONEYPOT_FIELD } from "@/lib/forms/inquiry-response";
 import { siteConfig } from "@/lib/config/site";
+import { cn } from "@/lib/utils/cn";
 
 export const SENSITIVE_DATA_NOTICE =
   "V obrazec ne vpisujte zdravstvenih podatkov pacientov ali drugih občutljivih informacij.";
@@ -37,13 +38,16 @@ export function SensitiveDataNotice() {
   );
 }
 
-export function PrivacyNote({ withMarketing = false }: { withMarketing?: boolean }) {
+export function PrivacyNote({
+  text = "Podatke iz obrazca uporabimo samo za odgovor na vaše sporočilo.",
+  className,
+}: {
+  text?: string;
+  className?: string;
+}) {
   return (
-    <p className="text-[13px] leading-relaxed text-ink-muted">
-      {withMarketing
-        ? "Podatke iz obrazca uporabimo za odgovor na vaše povpraševanje, za obvestila pa le, če to izrecno izberete."
-        : "Podatke iz obrazca uporabimo samo za odgovor na vaše sporočilo."}{" "}
-      Več o tem v{" "}
+    <p className={cn("text-[13px] leading-relaxed text-ink-muted", className)}>
+      {text} Več o tem v{" "}
       <Link
         href="/zasebnost"
         className="font-medium text-accent-700 underline underline-offset-2 hover:text-accent-800"
@@ -133,8 +137,4 @@ export function RequiredMark() {
       *
     </span>
   );
-}
-
-export function FieldGroup({ children }: { children: ReactNode }) {
-  return <div className="space-y-1">{children}</div>;
 }

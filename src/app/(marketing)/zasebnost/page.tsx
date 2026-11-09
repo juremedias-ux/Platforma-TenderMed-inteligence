@@ -14,7 +14,7 @@ export const metadata: Metadata = buildPageMetadata({
 export default function PrivacyPage() {
   const operator = siteConfig.legalOperator;
   return (
-    <LegalPage title="Izjava o zasebnosti" draftVersion={siteConfig.privacyNoticeVersion} draftDate="2026-11-08">
+    <LegalPage title="Izjava o zasebnosti" draftVersion={siteConfig.privacyNoticeVersion} draftDate="2026-11-09">
       <section>
         <h2>1. Upravljavec osebnih podatkov</h2>
         <p>
@@ -34,8 +34,7 @@ export default function PrivacyPage() {
         <p>Ta spletna stran zbira osebne podatke samo prek dveh obrazcev:</p>
         <ul>
           <li>
-            <strong>Obrazec za pilot ali predstavitev:</strong> ime in priimek, e-poštni naslov, izbrano področje
-            zanimanja, neobvezno sporočilo ter neobvezno soglasje za prejemanje obvestil.
+            <strong>Prijava interesa za pilot:</strong> e-poštni naslov.
           </li>
           <li>
             <strong>Kontaktni obrazec:</strong> ime in priimek, e-poštni naslov in sporočilo.
@@ -70,10 +69,6 @@ export default function PrivacyPage() {
             podlaga: ukrepi na zahtevo posameznika pred sklenitvijo pogodbe oziroma zakoniti interes upravljavca.{" "}
             <MissingInfo>pravna presoja podlage</MissingInfo>
           </li>
-          <li>
-            Pošiljanje obvestil o razvoju platforme, samo če ste to izrecno izbrali. Pravna podlaga: privolitev, ki jo
-            lahko kadar koli prekličete.
-          </li>
           <li>Zaščita obrazcev pred zlorabami. Predlagana pravna podlaga: zakoniti interes upravljavca.</li>
         </ul>
         <p>Podatkov ne uporabljamo za oglaševanje, profiliranje ali avtomatizirano odločanje.</p>
@@ -100,7 +95,7 @@ export default function PrivacyPage() {
         <h2>6. Rok hrambe</h2>
         <p>
           Povpraševanja in sporočila hranimo, dokler je to potrebno za odgovor in morebitno nadaljnje sodelovanje.{" "}
-          <MissingInfo>konkreten rok hrambe in postopek izbrisa</MissingInfo> Soglasje za obvestila hranimo do preklica.
+          <MissingInfo>konkreten rok hrambe in postopek izbrisa</MissingInfo>
           Zgoščene vrednosti za omejevanje poskusov se izbrišejo v približno 24 urah.
         </p>
       </section>
