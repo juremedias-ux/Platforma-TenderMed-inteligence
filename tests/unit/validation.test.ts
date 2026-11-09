@@ -3,52 +3,41 @@ import { LIMITS, contactMessageSchema, demoRequestSchema, toFieldErrors } from "
 import { readBodyWithLimit, BodyTooLargeError } from "@/lib/security/request-guards";
 import { verifyTurnstileToken } from "@/lib/security/turnstile";
 
-describe("demo request validation", () => {
-  const valid = { fullName: "Ana Novak", email: "ana@example.si", interestArea: "partnership" };
-
-  it("accepts the minimal required fields and defaults optional values", () => {
-    const result = demoRequestSchema.parse(valid);
-    expect(result).toEqual({ ...valid, message: null, marketingOptIn: false });
+describe("pilot sign-up validation (e-mail only)", () => {
+  it("accepts only an e-mail address and normalizes it", () => {
+    expect(demoRequestSchema.parse({ email: "  ANA@Example.SI " })).toEqual({ email: "ana@example.si" });
   });
 
-  it("normalizes whitespace and e-mail case", () => {
+  it("requires a valid e-mail address with Slovenian errors", () => {
+    const missing = demoRequestSchema.safeParse({});
+    expect(missing.success).toBe(false);
+    if (!missing.success) expect(toFieldErrors(missing.error).email).toBe("Vpišite e-poštni naslov.");
+
+    const empty = demoRequestSchema.safeParse({ email: "   " });
+    expect(empty.success).toBe(false);
+    if (!empty.success) expect(toFieldErrors(empty.error).email).toBe("Vpišite e-poštni naslov.");
+
+    const invalid = demoRequestSchema.safeParse({ email: "ni-email" });
+    expect(invalid.success).toBe(false);
+    if (!invalid.success) {
+      expect(toFieldErrors(invalid.error).email).toBe("Vpišite veljaven e-poštni naslov, npr. ime@organizacija.si.");
+    }
+  });
+
+  it("enforces the e-mail length limit matching the database constraint", () => {
+    expect(demoRequestSchema.safeParse({ email: `${"a".repeat(250)}@example.si` }).success).toBe(false);
+    expect(LIMITS.emailMax).toBe(254);
+  });
+
+  it("drops any other submitted fields", () => {
     const result = demoRequestSchema.parse({
-      ...valid,
-      fullName: "  Ana \n  Novak  ",
-      email: "  ANA@Example.SI ",
-      message: "  Vrstica 1\r\n\r\n\r\n\r\nVrstica 2  ",
+      email: "ana@example.si",
+      fullName: "Ana Novak",
+      interestArea: "partnership",
+      message: "Sporočilo",
+      marketingOptIn: true,
     });
-    expect(result.fullName).toBe("Ana Novak");
-    expect(result.email).toBe("ana@example.si");
-    expect(result.message).toBe("Vrstica 1\n\nVrstica 2");
-  });
-
-  it("does not require company, phone, job title or role", () => {
-    expect(demoRequestSchema.safeParse(valid).success).toBe(true);
-  });
-
-  it("enforces length limits matching the database constraints", () => {
-    expect(demoRequestSchema.safeParse({ ...valid, fullName: "A" }).success).toBe(false);
-    expect(demoRequestSchema.safeParse({ ...valid, fullName: "A".repeat(LIMITS.fullNameMax + 1) }).success).toBe(false);
-    expect(demoRequestSchema.safeParse({ ...valid, message: "x".repeat(LIMITS.demoMessageMax) }).success).toBe(true);
-    expect(demoRequestSchema.safeParse({ ...valid, message: "x".repeat(LIMITS.demoMessageMax + 1) }).success).toBe(
-      false,
-    );
-    expect(demoRequestSchema.safeParse({ ...valid, email: `${"a".repeat(250)}@example.si` }).success).toBe(false);
-  });
-
-  it("stores an empty or whitespace-only optional message as null", () => {
-    expect(demoRequestSchema.parse({ ...valid, message: "   \n " }).message).toBeNull();
-    expect(demoRequestSchema.parse({ ...valid, message: null }).message).toBeNull();
-  });
-
-  it("rejects unknown interest areas and control characters", () => {
-    expect(demoRequestSchema.safeParse({ ...valid, interestArea: "pricing" }).success).toBe(false);
-    expect(demoRequestSchema.safeParse({ ...valid, fullName: "Ana\u0007Novak" }).success).toBe(false);
-  });
-
-  it("rejects a non-boolean marketing consent value", () => {
-    expect(demoRequestSchema.safeParse({ ...valid, marketingOptIn: "true" }).success).toBe(false);
+    expect(result).toEqual({ email: "ana@example.si" });
   });
 });
 

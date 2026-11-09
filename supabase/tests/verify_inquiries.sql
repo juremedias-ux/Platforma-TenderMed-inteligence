@@ -155,6 +155,39 @@ begin
   end;
 end $$;
 
+-- 5. E-mail-only pilot sign-ups (migration 20261109120000) -----------------
+select public.submit_demo_request(null, ' Signup@Example.com ', null, null, false, null, 'v2', 'website:pilot');
+select public.submit_demo_request(null, 'signup@example.com', null, null, false, null, 'v2', 'website:pilot');
+
+do $$
+declare
+  v_rows integer;
+  v_row public.demo_requests;
+begin
+  select count(*) into v_rows from public.demo_requests where email = 'signup@example.com';
+  if v_rows <> 1 then raise exception 'e-mail-only sign-ups should be merged, found % rows', v_rows; end if;
+
+  select * into v_row from public.demo_requests where email = 'signup@example.com';
+  if v_row.full_name is not null or v_row.interest_area is not null then
+    raise exception 'name and interest area should stay empty';
+  end if;
+  if v_row.submission_count <> 2 then raise exception 'submission_count should be 2'; end if;
+
+  -- Constraints still apply when values are present.
+  begin
+    insert into public.demo_requests (full_name, email, privacy_notice_version, source)
+    values ('A', 'short@example.com', 'v2', 'website:pilot');
+    raise exception 'too short name accepted';
+  exception when check_violation then null;
+  end;
+  begin
+    insert into public.demo_requests (email, interest_area, privacy_notice_version, source)
+    values ('area@example.com', 'unknown_area', 'v2', 'website:pilot');
+    raise exception 'unknown interest area accepted';
+  exception when check_violation then null;
+  end;
+end $$;
+
 reset role;
 
 select 'inquiry migration verification passed' as result;

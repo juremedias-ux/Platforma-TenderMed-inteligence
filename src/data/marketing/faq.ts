@@ -41,7 +41,7 @@ export const faq = {
     {
       question: "Ali lahko sodelujemo kot distributer ali proizvajalec?",
       answer:
-        "Da. V obrazcu za pilot izberite »Partnersko sodelovanje« ali »Razpisi in prodajne priložnosti« in na kratko opišite, kaj vas zanima. Pogoji partnerskega sodelovanja še niso določeni.",
+        "Da. Prijavite interes s svojim e-poštnim naslovom ali nam prek kontaktnega obrazca na kratko opišite, kaj vas zanima. Pogoji partnerskega sodelovanja še niso določeni.",
     },
   ],
 } as const;

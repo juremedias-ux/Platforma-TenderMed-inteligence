@@ -1,18 +1,12 @@
-import type { InterestArea } from "@/lib/validation/inquiry-schemas";
-
 /**
  * Persistence boundary for public inquiries. Route handlers depend on these
  * interfaces, which keeps them testable with in-memory implementations and
  * lets the storage backend change without touching validation logic.
  */
 
+/** Pilot sign-up. Only the e-mail address is collected from visitors. */
 export interface DemoRequestRecord {
-  fullName: string;
   email: string;
-  interestArea: InterestArea;
-  message: string | null;
-  marketingOptIn: boolean;
-  consentVersion: string | null;
   privacyNoticeVersion: string;
   source: string;
 }
@@ -27,8 +21,8 @@ export interface ContactMessageRecord {
 
 export interface InquiryRepository {
   /**
-   * Stores a pilot/demo request. Repeated requests (same e-mail and interest
-   * within the deduplication window) are merged by the database; the caller
+   * Stores a pilot sign-up. Repeated sign-ups (same e-mail within the
+   * deduplication window) are merged by the database; the caller
    * receives the same result either way, so the response never reveals
    * whether an e-mail address already exists.
    */

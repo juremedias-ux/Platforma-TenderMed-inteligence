@@ -1,5 +1,5 @@
 import { Check } from "lucide-react";
-import { PilotInquiryForm } from "@/components/forms/pilot-inquiry-form";
+import { PilotSignupForm } from "@/components/forms/pilot-signup-form";
 import { Container } from "@/components/ui/container";
 import { pilot } from "@/data/marketing/home";
 
@@ -29,11 +29,9 @@ export function PilotSection() {
               </ul>
             </div>
           </div>
-          <div className="rounded-2xl border border-line bg-surface p-5 shadow-raised sm:p-8">
-            <h3 className="mb-6 font-display text-xl font-semibold text-ink">
-              Prijava interesa za pilot ali predstavitev
-            </h3>
-            <PilotInquiryForm />
+          <div className="self-start rounded-2xl border border-line bg-surface p-5 shadow-raised sm:p-8">
+            <h3 className="mb-5 font-display text-xl font-semibold text-ink">Prijava interesa za pilot</h3>
+            <PilotSignupForm />
           </div>
         </div>
       </Container>
