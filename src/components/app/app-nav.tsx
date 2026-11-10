@@ -29,7 +29,15 @@ const items: Record<AppNavKey, { label: string; icon: LucideIcon }> = {
   nastavitve: { label: "Nastavitve", icon: Settings },
 };
 
-export function AppNav({ organizationId, keys }: { organizationId: string; keys: AppNavKey[] }) {
+export function AppNav({
+  organizationId,
+  keys,
+  badges = {},
+}: {
+  organizationId: string;
+  keys: AppNavKey[];
+  badges?: Partial<Record<AppNavKey, number>>;
+}) {
   const pathname = usePathname();
   return (
     <nav aria-label="Navigacija aplikacije" className="relative">
@@ -50,6 +58,12 @@ export function AppNav({ organizationId, keys }: { organizationId: string; keys:
               >
                 <Item.icon className="size-4" aria-hidden="true" />
                 {Item.label}
+                {badges[key] ? (
+                  <span className="ml-auto rounded-full bg-accent-600 px-1.5 py-0.5 text-[11px] leading-none font-semibold text-white">
+                    {badges[key]}
+                    <span className="sr-only"> neprebranih</span>
+                  </span>
+                ) : null}
               </Link>
             </li>
           );

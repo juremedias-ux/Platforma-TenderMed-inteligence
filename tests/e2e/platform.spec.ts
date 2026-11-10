@@ -32,6 +32,7 @@ test.describe("platform without configuration", () => {
     "oprema/uvoz",
     "servisi",
     `servisi/${ORG}`,
+    "obvestila",
   ]) {
     test(`/app/[org]/${path} never renders organization data without a session`, async ({ page }) => {
       await page.goto(`/app/${ORG}/${path}`);
@@ -60,6 +61,11 @@ test.describe("platform without configuration", () => {
     expect(response.status()).toBe(403);
     expect(response.headers()["cache-control"]).toContain("no-store");
     expect(response.headers()["location"]).toBeUndefined();
+  });
+
+  test("the scheduled job endpoint is closed without a configured secret", async ({ request }) => {
+    const response = await request.get("/api/cron/notifications", { headers: { authorization: "Bearer x" } });
+    expect(response.status()).toBe(503);
   });
 
   test("malformed invitation links are handled", async ({ page }) => {

@@ -4,6 +4,7 @@ import { appNavKeys } from "@/components/app/nav-config";
 import { NoAccess, PlatformNotConfigured } from "@/components/app/state-message";
 import { TopBar } from "@/components/app/top-bar";
 import { getMemberships, getOrgContext, isPlatformConfigured, requireUser } from "@/lib/auth/session";
+import { countUnreadNotifications } from "@/lib/repositories/notifications";
 
 async function OrgShell({
   params,
@@ -34,6 +35,8 @@ async function OrgShell({
     );
   }
 
+  const unread = await countUnreadNotifications(context.supabase, context.organization.id).catch(() => 0);
+
   return (
     <>
       <TopBar
@@ -43,7 +46,7 @@ async function OrgShell({
       />
       <div className="mx-auto flex w-full max-w-[1440px] flex-col lg:flex-row">
         <aside className="border-b border-line bg-surface lg:sticky lg:top-14 lg:h-[calc(100dvh-3.5rem)] lg:w-56 lg:shrink-0 lg:border-r lg:border-b-0">
-          <AppNav organizationId={context.organization.id} keys={appNavKeys} />
+          <AppNav organizationId={context.organization.id} keys={appNavKeys} badges={{ obvestila: unread }} />
         </aside>
         <main
           id="vsebina"

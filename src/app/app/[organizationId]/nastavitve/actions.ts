@@ -23,6 +23,7 @@ const organizationSchema = z.object({
     .transform((v) => v.replace(/\s+/g, " ").trim())
     .pipe(z.string().min(2, { error: "Vpišite ime organizacije." }).max(160)),
   requireAcknowledgment: z.boolean(),
+  reminderAudience: z.enum(["responsible_or_operators", "operators"], { error: "Izberite prejemnike opomnikov." }),
 });
 
 export async function updateOrganizationAction(
@@ -34,13 +35,18 @@ export async function updateOrganizationAction(
   const parsed = organizationSchema.safeParse({
     name: formData.get("name"),
     requireAcknowledgment: formData.get("requireAcknowledgment") === "on",
+    reminderAudience: formData.get("reminderAudience"),
   });
   if (!parsed.success) return { status: "error", fieldErrors: fieldErrorsOf(parsed.error), values };
   try {
     const { supabase } = await requireOrgPermission(organizationId, "org.settings");
     const { error } = await supabase
       .from("organizations")
-      .update({ name: parsed.data.name, require_completion_acknowledgment: parsed.data.requireAcknowledgment })
+      .update({
+        name: parsed.data.name,
+        require_completion_acknowledgment: parsed.data.requireAcknowledgment,
+        reminder_audience: parsed.data.reminderAudience,
+      })
       .eq("id", organizationId);
     if (error) return failure(error, values);
   } catch (error) {

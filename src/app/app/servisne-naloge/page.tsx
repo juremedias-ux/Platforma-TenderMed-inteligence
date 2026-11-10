@@ -7,7 +7,10 @@ import { LoadError, PlatformNotConfigured, StateMessage } from "@/components/app
 import { TopBar } from "@/components/app/top-bar";
 import { getMemberships, getUserClient, isPlatformConfigured, requireUser } from "@/lib/auth/session";
 import { formatDateTimeRange } from "@/lib/dates/datetime";
+import { listNotifications } from "@/lib/repositories/notifications";
 import { listMyAssignments } from "@/lib/repositories/service";
+import { NotificationList } from "@/components/app/notifications/notification-list";
+import { MarkAllReadButton } from "@/components/app/notifications/notification-forms";
 import { requestTypeLabels } from "@/lib/service/domain";
 
 export const metadata: Metadata = { title: "Servisne naloge" };
@@ -24,7 +27,11 @@ async function Assignments() {
   let loaded;
   try {
     const supabase = await getUserClient();
-    loaded = { memberships: await getMemberships(), rows: await listMyAssignments(supabase) };
+    loaded = {
+      memberships: await getMemberships(),
+      rows: await listMyAssignments(supabase),
+      notifications: await listNotifications(supabase, { requestsOnly: true, unreadOnly: true }, 20),
+    };
   } catch {
     loaded = null;
   }
@@ -37,6 +44,20 @@ async function Assignments() {
           title="Servisne naloge"
           description="Zahtevki, ki so vam jih dodelile organizacije. Vidite samo dodeljene zahtevke."
         />
+        {loaded && loaded.notifications.length > 0 ? (
+          <section
+            className="mb-6 rounded-lg border border-line bg-surface p-5 shadow-card"
+            aria-labelledby="new-notifications"
+          >
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+              <h2 id="new-notifications" className="text-base font-semibold text-ink">
+                Nova obvestila
+              </h2>
+              <MarkAllReadButton />
+            </div>
+            <NotificationList notifications={loaded.notifications} />
+          </section>
+        ) : null}
         {!loaded ? (
           <LoadError />
         ) : loaded.rows.length === 0 ? (

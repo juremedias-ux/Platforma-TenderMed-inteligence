@@ -39,7 +39,7 @@ async function Settings({ params }: { params: PageProps<"/app/[organizationId]/n
   if (!context) return <NoAccess />;
   const { supabase, role, organization, user } = context;
 
-  const [members, invitations, locations] = await Promise.all([
+  const [members, invitations, locations, orgSettings] = await Promise.all([
     supabase
       .from("organization_memberships")
       .select("user_id, role, created_at, profiles!organization_memberships_user_id_fkey(full_name, email)")
@@ -62,8 +62,10 @@ async function Settings({ params }: { params: PageProps<"/app/[organizationId]/n
       .eq("organization_id", organizationId)
       .order("archived_at", { ascending: true, nullsFirst: true })
       .order("name"),
+    supabase.from("organizations").select("reminder_audience").eq("id", organizationId).maybeSingle(),
   ]);
-  if (members.error || invitations.error || locations.error) return <LoadError />;
+  if (members.error || invitations.error || locations.error || orgSettings.error) return <LoadError />;
+  const reminderAudience = (orgSettings.data?.reminder_audience as string | undefined) ?? "responsible_or_operators";
 
   return (
     <>
@@ -75,6 +77,7 @@ async function Settings({ params }: { params: PageProps<"/app/[organizationId]/n
               organizationId={organizationId}
               name={organization.name}
               requireAcknowledgment={organization.requireCompletionAcknowledgment}
+              reminderAudience={reminderAudience}
             />
           ) : (
             <dl className="grid gap-3 text-sm sm:grid-cols-2">

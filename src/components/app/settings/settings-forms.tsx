@@ -20,10 +20,12 @@ export function OrganizationForm({
   organizationId,
   name,
   requireAcknowledgment,
+  reminderAudience,
 }: {
   organizationId: string;
   name: string;
   requireAcknowledgment: boolean;
+  reminderAudience: string;
 }) {
   const [state, action] = useActionState(updateOrganizationAction.bind(null, organizationId), idleState);
   return (
@@ -40,6 +42,15 @@ export function OrganizationForm({
         <label htmlFor="requireAcknowledgment" className="text-sm text-ink-soft">
           Izvedbo, ki jo zabeleži zunanji serviser, mora potrditi ustanova, preden se posodobi servisni načrt.
         </label>
+      </div>
+      <div>
+        <Label htmlFor="reminderAudience">Prejemniki opomnikov o rokih</Label>
+        <Select id="reminderAudience" name="reminderAudience" defaultValue={reminderAudience} className="mt-1.5 h-11">
+          <option value="responsible_or_operators">
+            Odgovorna oseba načrta (če ni določena: lastniki, skrbniki in upravljavci opreme)
+          </option>
+          <option value="operators">Vsi lastniki, skrbniki in upravljavci opreme</option>
+        </Select>
       </div>
       <ActionMessage state={state} />
       <SubmitButton>Shrani</SubmitButton>

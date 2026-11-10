@@ -121,3 +121,38 @@ App:
 | Browser upload with progress, verification, signed download | implemented, awaiting configuration (needs the bucket created by the migration and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`; not run against real Storage here) |
 
 Tests after Phase 4: 133 unit, 63 database, 81 e2e (15 viewport skips).
+
+## Phase 5 — Notifications (done)
+
+Migration `20261110120400_notifications.sql`:
+
+- `notifications` (in-app, unique event key per recipient), `notification_preferences` (per user: e-mail
+  reminders, e-mail service updates), `email_outbox` (service role only; unique per recipient and event key,
+  idempotency key per row), `organizations.reminder_audience`.
+- Database triggers create service-update notifications for the other side of a request (never the actor):
+  appointment proposals and decisions, completions, acknowledgments, cancellation and closing, shared messages
+  (without message text), new assignments, accepted technician invitations.
+- `generate_due_reminders(today)`: smallest reached lead time per due date (missed runs catch up without
+  duplicates), weekly reminders for overdue items; recipients follow `reminder_audience`.
+- `claim_outbox` (SKIP LOCKED, access and preference re-check, stale `sending` rows retried within 23 hours
+  with the same idempotency key, otherwise `unknown`), `complete_outbox` (exponential backoff, at most 5
+  attempts).
+
+App:
+
+- `/app/[org]/obvestila` (list, mark as read, e-mail preferences), unread badge in the navigation, new
+  notifications on `/app/servisne-naloge`, reminder recipients in organization settings.
+- Resend adapter with `Idempotency-Key`; used only when `RESEND_API_KEY` and `EMAIL_FROM` are set. E-mails
+  contain the title, a short body and a link — never message contents or document data.
+- `/api/cron/notifications` (Bearer `CRON_SECRET`, timing-safe comparison): reminders, e-mail sending,
+  removal of abandoned uploads. `vercel.json` schedules it daily at 05:17 UTC (Hobby plan: once per day).
+- Server actions send queued e-mails right after the response with `after()`.
+
+| Module                                                                          | Status                                                                                 |
+| ------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| In-app notifications, preferences, reminder generation, service-update triggers | implemented and tested (database)                                                      |
+| Outbox claiming, retries, ambiguous outcomes, access re-check                   | implemented and tested (database)                                                      |
+| Resend adapter, e-mail rendering, cron authorization                            | implemented and tested (unit); awaiting configuration (no verified sending domain yet) |
+| Daily schedule on Vercel                                                        | implemented, awaiting configuration (`CRON_SECRET` in Vercel)                          |
+
+Tests after Phase 5: 137 unit, 71 database, 85 e2e (15 viewport skips).

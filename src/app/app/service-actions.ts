@@ -2,10 +2,12 @@
 
 import { refresh } from "next/cache";
 import { redirect } from "next/navigation";
+import { after } from "next/server";
 import { AuthorizationError, getSessionUser, getUserClient, isUuid, requireOrgPermission } from "@/lib/auth/session";
 import { byteaHex, createInvitationToken } from "@/lib/auth/tokens";
 import { dbErrorMessage, registerErrorMessages } from "@/lib/db/errors";
 import { fieldErrorsOf, formValues, type ActionState } from "@/lib/forms/action-state";
+import { sendPendingEmailsQuietly } from "@/lib/notifications/outbox";
 import { getAppOrigin } from "@/lib/security/server-request";
 import { isOneOf } from "@/lib/equipment/domain";
 import { replacementStatuses, requestStatuses } from "@/lib/service/domain";
@@ -73,6 +75,8 @@ async function rpc(name: string, params: Record<string, unknown>, success: strin
   } catch (error) {
     return failure(error);
   }
+  // Notifications were queued by database triggers; send their e-mails after the response.
+  after(sendPendingEmailsQuietly);
   refresh();
   return { status: "success", message: success };
 }
@@ -285,6 +289,7 @@ export async function postMessageAction(
   } catch (error) {
     return failure(error, values);
   }
+  after(sendPendingEmailsQuietly);
   refresh();
   return { status: "success", message: "Sporočilo je poslano." };
 }
