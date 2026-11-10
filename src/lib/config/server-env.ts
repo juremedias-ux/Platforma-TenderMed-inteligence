@@ -33,6 +33,29 @@ export function getSupabaseServerConfig(): SupabaseServerConfig | null {
   return { url, secretKey };
 }
 
+export interface SupabasePublicConfig {
+  url: string;
+  publishableKey: string;
+}
+
+/**
+ * URL and publishable (public) key for user-scoped clients. These clients act
+ * with the signed-in user's session, so RLS applies to every query.
+ * NEXT_PUBLIC_SUPABASE_ANON_KEY is accepted as the legacy name.
+ */
+export function getSupabasePublicConfig(): SupabasePublicConfig | null {
+  const url = readNonEmpty("NEXT_PUBLIC_SUPABASE_URL");
+  const publishableKey =
+    readNonEmpty("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY") ?? readNonEmpty("NEXT_PUBLIC_SUPABASE_ANON_KEY");
+  if (!url || !publishableKey) return null;
+  return { url, publishableKey };
+}
+
+/** Secret used by the scheduler to call /api/cron/* (Vercel sends it as a bearer token). */
+export function getCronSecret(): string | null {
+  return readNonEmpty("CRON_SECRET");
+}
+
 export function getTurnstileSecret(): string | null {
   return readNonEmpty("TURNSTILE_SECRET_KEY");
 }
