@@ -8,7 +8,7 @@ import { LoadError, PlatformNotConfigured, StateMessage } from "@/components/app
 import { TopBar } from "@/components/app/top-bar";
 import { getMemberships, getUserClient, isPlatformConfigured, requireUser } from "@/lib/auth/session";
 import { ljubljanaDate } from "@/lib/dates/datetime";
-import { getRequest, getRequestBrief, getRequestThread, profileNames } from "@/lib/repositories/service";
+import { getRequest, getRequestBrief, getRequestThread, listDocuments, profileNames } from "@/lib/repositories/service";
 
 export const metadata: Metadata = { title: "Servisna naloga" };
 
@@ -31,9 +31,10 @@ async function Assignment({ params }: Pick<Props, "params">) {
     const supabase = await getUserClient();
     const request = await getRequest(supabase, requestId);
     if (request) {
-      const [brief, thread] = await Promise.all([
+      const [brief, thread, documents] = await Promise.all([
         getRequestBrief(supabase, requestId),
         getRequestThread(supabase, requestId),
+        listDocuments(supabase, { organizationId: request.organization_id, requestId }),
       ]);
       const names = await profileNames(supabase, [
         request.created_by,
@@ -41,8 +42,9 @@ async function Assignment({ params }: Pick<Props, "params">) {
         ...thread.messages.map((m) => m.author_id),
         ...thread.completions.flatMap((c) => [c.recorded_by, c.acknowledged_by, c.voided_by]),
         ...thread.events.map((e) => e.actor_user_id),
+        ...documents.map((d) => d.created_by),
       ]);
-      loaded = brief ? { request, brief, thread, names } : null;
+      loaded = brief ? { request, brief, thread, names, documents } : null;
     } else {
       loaded = null;
     }
@@ -94,6 +96,7 @@ async function Assignment({ params }: Pick<Props, "params">) {
               today={ljubljanaDate()}
               canAssign={false}
               canVoid={false}
+              documents={loaded.documents}
             />
           </>
         )}

@@ -4,7 +4,15 @@ import { Badge } from "@/components/ui/badge";
 import { formatDateTime, formatDateTimeRange as formatRange } from "@/lib/dates/datetime";
 import { formatDate } from "@/lib/dates/format";
 import { equipmentCategoryLabels, isOneOf, equipmentCategories } from "@/lib/equipment/domain";
-import type { CompletionRow, RequestBrief, ServiceRequestRow, getRequestThread } from "@/lib/repositories/service";
+import type {
+  CompletionRow,
+  DocumentRow,
+  RequestBrief,
+  ServiceRequestRow,
+  getRequestThread,
+} from "@/lib/repositories/service";
+import { DocumentList } from "@/components/app/documents/document-list";
+import { DocumentUploader } from "@/components/app/documents/document-uploader";
 import {
   acknowledgmentLabels,
   availableTransitions,
@@ -44,6 +52,7 @@ export interface RequestViewProps {
   equipmentHref?: string;
   canAssign: boolean;
   canVoid: boolean;
+  documents: DocumentRow[];
 }
 
 function Card({ title, children, id }: { title: string; children: ReactNode; id: string }) {
@@ -72,6 +81,7 @@ export function RequestView({
   equipmentHref,
   canAssign,
   canVoid,
+  documents,
 }: RequestViewProps) {
   const name = (id: string | null) => (id ? (names.get(id) ?? "Nekdanji udeleženec") : "Sistem");
   const open = request.status !== "zakljuceno" && request.status !== "preklicano";
@@ -238,6 +248,28 @@ export function RequestView({
                     : undefined
                 }
               />
+            </div>
+          ) : null}
+        </Card>
+
+        <Card title="Dokumenti" id="documents">
+          <DocumentList
+            documents={documents}
+            names={names}
+            canManage={actor === "operator"}
+            showSharing={actor === "operator"}
+          />
+          {canCoordinate ? (
+            <div className="mt-5 border-t border-line pt-5">
+              <DocumentUploader
+                organizationId={request.organization_id}
+                requestId={request.id}
+                allowSharing={actor === "operator"}
+                defaultType="service_report"
+              />
+              {actor === "assignee" ? (
+                <p className="mt-2 text-xs text-ink-muted">Dokumenti, ki jih naložite, so vidni organizaciji in vam.</p>
+              ) : null}
             </div>
           ) : null}
         </Card>

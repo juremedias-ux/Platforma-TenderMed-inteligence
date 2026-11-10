@@ -21,7 +21,14 @@ import {
   sourceBasisLabels,
 } from "@/lib/equipment/domain";
 import { countMonths, explainSchedule } from "@/lib/maintenance/schedule";
-import { listCompletionsForEquipment, listRequestsForEquipment } from "@/lib/repositories/service";
+import {
+  listCompletionsForEquipment,
+  listDocuments,
+  listRequestsForEquipment,
+  profileNames,
+} from "@/lib/repositories/service";
+import { DocumentList } from "@/components/app/documents/document-list";
+import { DocumentUploader } from "@/components/app/documents/document-uploader";
 import { acknowledgmentLabels, outcomeLabels } from "@/lib/service/domain";
 import { planLabel } from "@/lib/service/plan-label";
 import Link from "next/link";
@@ -71,12 +78,17 @@ async function EquipmentDetail({ params }: Pick<Props, "params">) {
         listLocations(supabase, organizationId),
         listMemberOptions(supabase, organizationId),
       ]);
-      const [audit, requests, completions] = await Promise.all([
+      const [audit, requests, completions, documents] = await Promise.all([
         listAuditFor(supabase, organizationId, [equipment.id, ...plans.map((p) => p.id)]),
         listRequestsForEquipment(supabase, organizationId, equipment.id),
         listCompletionsForEquipment(supabase, organizationId, equipment.id),
+        listDocuments(supabase, { organizationId, equipmentId: equipment.id }),
       ]);
-      loaded = { equipment, plans, locations, members, audit, requests, completions };
+      const uploaderNames = await profileNames(
+        supabase,
+        documents.map((d) => d.created_by),
+      );
+      loaded = { equipment, plans, locations, members, audit, requests, completions, documents, uploaderNames };
     } else {
       loaded = null;
     }
@@ -90,7 +102,7 @@ async function EquipmentDetail({ params }: Pick<Props, "params">) {
       </StateMessage>
     );
   }
-  const { equipment, plans, locations, members, audit, requests, completions } = loaded;
+  const { equipment, plans, locations, members, audit, requests, completions, documents, uploaderNames } = loaded;
   const requestNumber = new Map(requests.map((r) => [r.id, r.reference_number]));
   const today = ljubljanaDate();
   const memberName = new Map(members.map((m) => [m.id, m.name]));
@@ -244,6 +256,24 @@ async function EquipmentDetail({ params }: Pick<Props, "params">) {
               })}
             </ul>
           )}
+        </Card>
+
+        <Card title="Dokumenti">
+          <DocumentList
+            documents={documents}
+            names={uploaderNames}
+            canManage={can(role, "documents.manage")}
+            showSharing={false}
+          />
+          {can(role, "documents.manage") && !archived ? (
+            <div className="mt-5 border-t border-line pt-5">
+              <DocumentUploader
+                organizationId={organizationId}
+                equipmentId={equipment.id}
+                defaultType="instructions_for_use"
+              />
+            </div>
+          ) : null}
         </Card>
 
         <Card

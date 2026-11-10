@@ -60,10 +60,16 @@ describe("appointment input", () => {
 describe("completion and message input", () => {
   it("validates completion records", () => {
     expect(
-      completionSchema.safeParse({ completedOn: "2026-11-01", outcome: "completed", summary: "ok", replaces: "" }).success,
+      completionSchema.safeParse({ completedOn: "2026-11-01", outcome: "completed", summary: "ok", replaces: "" })
+        .success,
     ).toBe(false);
     expect(
-      completionSchema.parse({ completedOn: "2026-11-01", outcome: "completed", summary: "Pregled opravljen", replaces: "" }),
+      completionSchema.parse({
+        completedOn: "2026-11-01",
+        outcome: "completed",
+        summary: "Pregled opravljen",
+        replaces: "",
+      }),
     ).toMatchObject({ replaces: null });
   });
 

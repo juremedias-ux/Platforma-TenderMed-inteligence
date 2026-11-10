@@ -374,3 +374,40 @@ export async function listEquipmentChoices(
       .map((p) => ({ id: p.id as string, label: planLabel(p) })),
   }));
 }
+
+export interface DocumentRow {
+  id: string;
+  equipment_id: string | null;
+  service_request_id: string | null;
+  document_type: string;
+  title: string;
+  file_name: string;
+  mime_type: string;
+  size_bytes: number;
+  shared_with_assignees: boolean;
+  uploaded_as: "member" | "assignee";
+  created_by: string | null;
+  created_at: string;
+  version: number;
+}
+
+const DOCUMENT_COLUMNS =
+  "id, equipment_id, service_request_id, document_type, title, file_name, mime_type, size_bytes, shared_with_assignees, uploaded_as, created_by, created_at, version";
+
+/** Ready, non-archived documents of an equipment record or a service request. */
+export async function listDocuments(
+  supabase: SupabaseClient,
+  scope: { organizationId: string; equipmentId?: string; requestId?: string },
+) {
+  let query = supabase
+    .from("documents")
+    .select(DOCUMENT_COLUMNS)
+    .eq("organization_id", scope.organizationId)
+    .eq("status", "ready")
+    .is("archived_at", null);
+  if (scope.equipmentId) query = query.eq("equipment_id", scope.equipmentId);
+  if (scope.requestId) query = query.eq("service_request_id", scope.requestId);
+  const { data, error } = await query.order("created_at", { ascending: false }).limit(200);
+  if (error) throw new QueryError("documents", error.code);
+  return (data ?? []) as DocumentRow[];
+}

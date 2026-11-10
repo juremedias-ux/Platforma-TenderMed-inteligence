@@ -55,6 +55,13 @@ test.describe("platform without configuration", () => {
     }
   });
 
+  test("document downloads refuse requests without a session", async ({ request }) => {
+    const response = await request.get(`/app/dokumenti/${ORG}`, { maxRedirects: 0 });
+    expect(response.status()).toBe(403);
+    expect(response.headers()["cache-control"]).toContain("no-store");
+    expect(response.headers()["location"]).toBeUndefined();
+  });
+
   test("malformed invitation links are handled", async ({ page }) => {
     await page.goto("/povabilo/neveljaven");
     await expect(page.getByText(/Povabilo|konfigurirana/).first()).toBeVisible();

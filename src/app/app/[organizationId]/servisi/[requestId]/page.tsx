@@ -8,7 +8,7 @@ import { LoadError, NoAccess, StateMessage } from "@/components/app/state-messag
 import { can } from "@/lib/auth/permissions";
 import { requireOrgPage } from "@/lib/auth/session";
 import { ljubljanaDate } from "@/lib/dates/datetime";
-import { getRequest, getRequestBrief, getRequestThread, profileNames } from "@/lib/repositories/service";
+import { getRequest, getRequestBrief, getRequestThread, listDocuments, profileNames } from "@/lib/repositories/service";
 
 export const metadata: Metadata = { title: "Servisni zahtevek" };
 
@@ -24,9 +24,10 @@ async function RequestDetail({ params }: Pick<Props, "params">) {
   try {
     const request = await getRequest(supabase, requestId);
     if (request && request.organization_id === organizationId) {
-      const [brief, thread] = await Promise.all([
+      const [brief, thread, documents] = await Promise.all([
         getRequestBrief(supabase, requestId),
         getRequestThread(supabase, requestId),
+        listDocuments(supabase, { organizationId: request.organization_id, requestId }),
       ]);
       const names = await profileNames(supabase, [
         request.created_by,
@@ -34,9 +35,10 @@ async function RequestDetail({ params }: Pick<Props, "params">) {
         ...thread.messages.map((m) => m.author_id),
         ...thread.completions.flatMap((c) => [c.recorded_by, c.acknowledged_by, c.voided_by]),
         ...thread.events.map((e) => e.actor_user_id),
+        ...documents.map((d) => d.created_by),
         ...thread.assignments.map((a) => a.assignee_user_id),
       ]);
-      loaded = brief ? { request, brief, thread, names } : null;
+      loaded = brief ? { request, brief, thread, names, documents } : null;
     } else {
       loaded = null;
     }
@@ -50,7 +52,7 @@ async function RequestDetail({ params }: Pick<Props, "params">) {
       </StateMessage>
     );
   }
-  const { request, brief, thread, names } = loaded;
+  const { request, brief, thread, names, documents } = loaded;
   const operator = can(role, "service.coordinate");
   const open = request.status !== "zakljuceno" && request.status !== "preklicano";
 
@@ -76,6 +78,7 @@ async function RequestDetail({ params }: Pick<Props, "params">) {
         equipmentHref={`/app/${organizationId}/oprema/${request.equipment_id}`}
         canAssign={can(role, "service.assign")}
         canVoid={can(role, "completion.void")}
+        documents={documents}
       />
     </>
   );

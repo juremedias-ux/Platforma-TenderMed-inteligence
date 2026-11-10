@@ -88,3 +88,36 @@ Migration `20261110120200_service_collaboration.sql`:
 | Service history on the equipment page, shared timeline, overview counts                   | implemented; queries not yet run against PostgREST                |
 
 Tests after Phase 3: 129 unit, 56 database, 79 e2e (15 viewport skips).
+
+## Phase 4 — Documents (done)
+
+Migration `20261110120300_documents.sql`:
+
+- Private bucket `documents` (20 MB limit, PDF / JPEG / PNG / WebP / DOCX / XLSX); fixed object path
+  `<organization_id>/<document_id>`, enforced by a check constraint.
+- `documents` table with `pending → ready | rejected` lifecycle, optional equipment or service-request
+  scope, `shared_with_assignees` (request documents only), metadata edits only on ready documents,
+  no client deletes, audit trigger. `maintenance_plans.source_document_id` now references documents within the
+  same organization.
+- `create_pending_document` (members with document rights, or the request's assignee — assignee uploads are
+  always shared), `finalize_document` and `expire_pending_documents` (service role only).
+- Storage RLS: authenticated users can read an object only when its document row is `ready` and readable
+  for them; no client insert, update or delete policies.
+
+App:
+
+- Upload: server action creates the pending row and a signed upload URL; the browser uploads with progress
+  (XMLHttpRequest); the server downloads the object with the service role, checks size and magic bytes, then
+  finalizes or deletes it.
+- Download: `/app/dokumenti/[id]` checks the row through RLS and redirects to a 60-second signed URL.
+- Documents on the equipment page and on service requests (members and assignees), sharing toggle and
+  archiving for operators. `cleanupAbandonedUploads()` removes objects of uploads pending for more than a day
+  (scheduled in Phase 5).
+
+| Module                                                      | Status                                                                                                                                                        |
+| ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Document records, access rules, storage RLS, pending expiry | implemented and tested (database, storage schema emulated)                                                                                                    |
+| File type and signature checks, file name sanitizing        | implemented and tested (unit)                                                                                                                                 |
+| Browser upload with progress, verification, signed download | implemented, awaiting configuration (needs the bucket created by the migration and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`; not run against real Storage here) |
+
+Tests after Phase 4: 133 unit, 63 database, 81 e2e (15 viewport skips).

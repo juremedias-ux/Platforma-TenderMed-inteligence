@@ -151,6 +151,8 @@ export function describeEvent(type: string, from: string | null, to: string | nu
       return "Zapis o izvedbi razveljavljen";
     case "replacement_changed":
       return `Nadomestna oprema: ${replacement(from)} → ${replacement(to)}`;
+    case "document_added":
+      return "Dodan dokument";
     case "assignee_added":
       return "Dodan zunanji sodelavec";
     case "assignee_revoked":
