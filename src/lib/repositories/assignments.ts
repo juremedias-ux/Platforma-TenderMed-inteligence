@@ -2,10 +2,7 @@ import "server-only";
 
 import { getSessionUser, getUserClient } from "@/lib/auth/session";
 
-/**
- * Number of active service assignments of the current user. Returns 0 until
- * the service-collaboration tables exist (query error = table missing).
- */
+/** Number of active service assignments of the current user (throws on query errors). */
 export async function countActiveAssignments(): Promise<number> {
   const user = await getSessionUser();
   if (!user) return 0;
@@ -15,6 +12,6 @@ export async function countActiveAssignments(): Promise<number> {
     .select("id", { count: "exact", head: true })
     .eq("assignee_user_id", user.id)
     .is("revoked_at", null);
-  if (error) return 0;
+  if (error) throw new Error(`assignments query failed: ${error.code ?? "unknown"}`);
   return count ?? 0;
 }

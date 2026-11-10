@@ -12,6 +12,7 @@ import { ljubljanaDate } from "@/lib/dates/datetime";
 import { describeDeadline, formatDate } from "@/lib/dates/format";
 import { activityTypeLabels } from "@/lib/equipment/domain";
 import { getOverviewCounts, listAgenda } from "@/lib/repositories/equipment";
+import { countAwaitingAcknowledgment, countOpenRequests } from "@/lib/repositories/service";
 import { cn } from "@/lib/utils/cn";
 
 export const metadata: Metadata = { title: "Pregled" };
@@ -67,15 +68,17 @@ async function Overview({ params }: Pick<Props, "params">) {
 
   let loaded;
   try {
-    const [counts, upcoming] = await Promise.all([
+    const [counts, upcoming, openRequests, awaiting] = await Promise.all([
       getOverviewCounts(supabase, organizationId, today),
       listAgenda(supabase, organizationId, addDays(today, 30), 8),
+      countOpenRequests(supabase, organizationId),
+      countAwaitingAcknowledgment(supabase, organizationId),
     ]);
-    loaded = { counts, upcoming };
+    loaded = { counts, upcoming, openRequests, awaiting };
   } catch {
     return <LoadError />;
   }
-  const { counts, upcoming } = loaded;
+  const { counts, upcoming, openRequests, awaiting } = loaded;
   const base = `/app/${organizationId}`;
 
   return (
@@ -97,7 +100,7 @@ async function Overview({ params }: Pick<Props, "params">) {
         </StateMessage>
       ) : (
         <div className="space-y-6">
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <Metric label="Oprema v evidenci" value={counts.equipment} href={`${base}/oprema`} />
             <Metric label="Rok je potekel" value={counts.overdue} href={`${base}/koledar?obdobje=30`} tone="danger" />
             <Metric label="Roki v 30 dneh" value={counts.dueSoon} href={`${base}/koledar?obdobje=30`} tone="warning" />
@@ -107,6 +110,13 @@ async function Overview({ params }: Pick<Props, "params">) {
               href={`${base}/oprema?status=in_service`}
             />
             <Metric label="Brez odprtega roka" value={counts.withoutOpenDue} href={`${base}/oprema`} />
+            <Metric label="Odprti servisni zahtevki" value={openRequests} href={`${base}/servisi`} />
+            <Metric
+              label="Izvedbe čakajo na potrditev"
+              value={awaiting}
+              href={`${base}/servisi?prikaz=caka_na_potrditev`}
+              tone="warning"
+            />
           </div>
           <section
             className="rounded-lg border border-line bg-surface p-5 shadow-card sm:p-6"

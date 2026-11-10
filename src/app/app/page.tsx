@@ -3,7 +3,7 @@ import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
-import { PlatformNotConfigured, StateMessage } from "@/components/app/state-message";
+import { LoadError, PlatformNotConfigured, StateMessage } from "@/components/app/state-message";
 import { TopBar } from "@/components/app/top-bar";
 import { getMemberships, isPlatformConfigured, requireUser } from "@/lib/auth/session";
 import { orgRoleLabels } from "@/lib/auth/permissions";
@@ -27,8 +27,20 @@ async function Hub() {
     );
   }
   const user = await requireUser("/app");
-  const memberships = await getMemberships();
-  const assignments = await countActiveAssignments();
+  let loaded;
+  try {
+    loaded = { memberships: await getMemberships(), assignments: await countActiveAssignments() };
+  } catch {
+    loaded = null;
+  }
+  if (!loaded) {
+    return (
+      <main id="vsebina" className="mx-auto max-w-3xl px-4 py-10">
+        <LoadError />
+      </main>
+    );
+  }
+  const { memberships, assignments } = loaded;
 
   if (memberships.length === 1 && assignments === 0) {
     redirect(`/app/${memberships[0]!.organization.id}/pregled`);

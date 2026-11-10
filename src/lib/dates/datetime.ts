@@ -75,3 +75,12 @@ export function formatDateTime(value: string | Date): string {
 export function ljubljanaDate(instant: Date = new Date()): IsoDate {
   return toLjubljanaParts(instant).date;
 }
+
+/** "12. 11. 2026 09:00–11:00", or both full date-times when the range spans days (Ljubljana time). */
+export function formatDateTimeRange(starts: string, ends: string): string {
+  const a = toLjubljanaParts(new Date(starts));
+  const b = toLjubljanaParts(new Date(ends));
+  return a.date === b.date
+    ? `${formatDateTime(starts)}–${b.time}`
+    : `${formatDateTime(starts)} – ${formatDateTime(ends)}`;
+}

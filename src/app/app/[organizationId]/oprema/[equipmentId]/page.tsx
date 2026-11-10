@@ -21,6 +21,12 @@ import {
   sourceBasisLabels,
 } from "@/lib/equipment/domain";
 import { countMonths, explainSchedule } from "@/lib/maintenance/schedule";
+import { listCompletionsForEquipment, listRequestsForEquipment } from "@/lib/repositories/service";
+import { acknowledgmentLabels, outcomeLabels } from "@/lib/service/domain";
+import { planLabel } from "@/lib/service/plan-label";
+import Link from "next/link";
+import { RequestStatusBadge } from "@/components/app/service/badges";
+import { CreateRequestDialog } from "@/components/app/service/request-forms";
 import { getEquipment, listAuditFor, listLocations, listMemberOptions, listPlans } from "@/lib/repositories/equipment";
 
 export const metadata: Metadata = { title: "Oprema" };
@@ -65,8 +71,12 @@ async function EquipmentDetail({ params }: Pick<Props, "params">) {
         listLocations(supabase, organizationId),
         listMemberOptions(supabase, organizationId),
       ]);
-      const audit = await listAuditFor(supabase, organizationId, [equipment.id, ...plans.map((p) => p.id)]);
-      loaded = { equipment, plans, locations, members, audit };
+      const [audit, requests, completions] = await Promise.all([
+        listAuditFor(supabase, organizationId, [equipment.id, ...plans.map((p) => p.id)]),
+        listRequestsForEquipment(supabase, organizationId, equipment.id),
+        listCompletionsForEquipment(supabase, organizationId, equipment.id),
+      ]);
+      loaded = { equipment, plans, locations, members, audit, requests, completions };
     } else {
       loaded = null;
     }
@@ -80,7 +90,8 @@ async function EquipmentDetail({ params }: Pick<Props, "params">) {
       </StateMessage>
     );
   }
-  const { equipment, plans, locations, members, audit } = loaded;
+  const { equipment, plans, locations, members, audit, requests, completions } = loaded;
+  const requestNumber = new Map(requests.map((r) => [r.id, r.reference_number]));
   const today = ljubljanaDate();
   const memberName = new Map(members.map((m) => [m.id, m.name]));
   const canManage = can(role, "equipment.manage");
@@ -231,6 +242,71 @@ async function EquipmentDetail({ params }: Pick<Props, "params">) {
                   </li>
                 );
               })}
+            </ul>
+          )}
+        </Card>
+
+        <Card
+          title="Servisni zahtevki"
+          actions={
+            can(role, "service.create") && !archived ? (
+              <CreateRequestDialog
+                organizationId={organizationId}
+                equipment={[
+                  {
+                    id: equipment.id,
+                    name: equipment.name,
+                    plans: plans.filter((p) => p.status === "active").map((p) => ({ id: p.id, label: planLabel(p) })),
+                  },
+                ]}
+                defaultEquipmentId={equipment.id}
+                label="Nov zahtevek"
+              />
+            ) : null
+          }
+        >
+          {requests.length === 0 ? (
+            <p className="text-sm text-ink-muted">Za to opremo ni servisnih zahtevkov.</p>
+          ) : (
+            <ul className="divide-y divide-line">
+              {requests.map((r) => (
+                <li key={r.id} className="flex flex-wrap items-center justify-between gap-2 py-2 first:pt-0 last:pb-0">
+                  <Link
+                    href={`/app/${organizationId}/servisi/${r.id}`}
+                    className="text-sm font-medium text-ink hover:underline"
+                  >
+                    #{r.reference_number} {r.title}
+                  </Link>
+                  <RequestStatusBadge status={r.status} />
+                </li>
+              ))}
+            </ul>
+          )}
+        </Card>
+
+        <Card title="Servisna zgodovina">
+          {completions.length === 0 ? (
+            <p className="text-sm text-ink-muted">Ni zapisov o izvedenih servisih.</p>
+          ) : (
+            <ul className="divide-y divide-line text-sm">
+              {completions.map((c) => (
+                <li key={c.id} className="py-3 first:pt-0 last:pb-0">
+                  <p className="font-medium text-ink">
+                    {formatDate(c.completed_on)} · {outcomeLabels[c.outcome]}
+                    <span className="font-normal text-ink-muted">
+                      {" "}
+                      · {c.voided_at ? "razveljavljeno" : acknowledgmentLabels[c.acknowledgment_status]}
+                    </span>
+                  </p>
+                  <p className={c.voided_at ? "text-ink-muted line-through" : "text-ink-soft"}>{c.summary}</p>
+                  <Link
+                    href={`/app/${organizationId}/servisi/${c.service_request_id}`}
+                    className="text-xs text-accent-700 hover:underline"
+                  >
+                    Zahtevek #{requestNumber.get(c.service_request_id) ?? ""}
+                  </Link>
+                </li>
+              ))}
             </ul>
           )}
         </Card>

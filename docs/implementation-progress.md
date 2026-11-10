@@ -15,14 +15,14 @@ configuration**, **partially implemented**, **planned**.
 
 ## Phase 1 — Foundation (done, commit `d02db7a`)
 
-| Module | Status |
-| --- | --- |
+| Module                                                                                                      | Status                                                                                                              |
+| ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
 | Login, logout, password recovery (`/prijava`, `/pozabljeno-geslo`, `/ponastavitev-gesla`, `/auth/callback`) | implemented, awaiting configuration (needs Supabase Auth redirect URLs; recovery e-mail uses Supabase default SMTP) |
-| Invitation-only onboarding (`/povabilo/[token]`, accept / create account) | implemented and tested (database); UI flow needs a configured project |
-| Organizations, memberships, roles, last-owner rule | implemented and tested (database) |
-| Operator bootstrap (`scripts/bootstrap-organization.mjs`) | implemented and tested (database function) |
-| Settings: organization, members, invitations (copy-once link) | implemented; UI needs a configured project |
-| Audit trigger (changed column names only) | implemented and tested |
+| Invitation-only onboarding (`/povabilo/[token]`, accept / create account)                                   | implemented and tested (database); UI flow needs a configured project                                               |
+| Organizations, memberships, roles, last-owner rule                                                          | implemented and tested (database)                                                                                   |
+| Operator bootstrap (`scripts/bootstrap-organization.mjs`)                                                   | implemented and tested (database function)                                                                          |
+| Settings: organization, members, invitations (copy-once link)                                               | implemented; UI needs a configured project                                                                          |
+| Audit trigger (changed column names only)                                                                   | implemented and tested                                                                                              |
 
 Tests after Phase 1: 92 unit, 27 database, 51 e2e (15 skips).
 
@@ -39,19 +39,52 @@ Migration `20261110120100_equipment.sql`:
 - Views `equipment_overview` and `maintenance_agenda` (`security_invoker`, RLS of the base tables applies).
 - `import_equipment(org, rows)`: all-or-nothing import, at most 500 rows, creates missing locations.
 
-| Module | Status |
-| --- | --- |
-| Equipment register: list with search, filters, pagination; create, edit (version check), archive / restore | implemented; database rules tested; UI needs a configured project |
-| Locations (create from equipment form or settings, rename, archive / restore) | implemented; database rules tested |
+| Module                                                                                                         | Status                                                                         |
+| -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| Equipment register: list with search, filters, pagination; create, edit (version check), archive / restore     | implemented; database rules tested; UI needs a configured project              |
+| Locations (create from equipment form or settings, rename, archive / restore)                                  | implemented; database rules tested                                             |
 | Maintenance plans (fixed_calendar, after_completion, one_off; source basis; reminder days; responsible person) | implemented and tested (TypeScript and SQL scheduling parity, 12 shared cases) |
-| Calendar (`/koledar`, 30 / 90 / 365 days, overdue first) | implemented; view tested in the database |
-| Overview with real counts (equipment, overdue, due in 30 days, unavailable, without open due date) | implemented; queries not yet run against PostgREST |
-| CSV import (fixed format, preview, row errors, ≤ 500 rows / 1 MB, UTF-8 or Windows-1250, all-or-nothing) | implemented and tested (parser, validation, database function) |
-| CSV export (formula-injection neutralized, round-trips through the import) | implemented and tested (unit) |
-| Equipment change history (audit events on the detail page) | implemented; audit trigger tested |
+| Calendar (`/koledar`, 30 / 90 / 365 days, overdue first)                                                       | implemented; view tested in the database                                       |
+| Overview with real counts (equipment, overdue, due in 30 days, unavailable, without open due date)             | implemented; queries not yet run against PostgREST                             |
+| CSV import (fixed format, preview, row errors, ≤ 500 rows / 1 MB, UTF-8 or Windows-1250, all-or-nothing)       | implemented and tested (parser, validation, database function)                 |
+| CSV export (formula-injection neutralized, round-trips through the import)                                     | implemented and tested (unit)                                                  |
+| Equipment change history (audit events on the detail page)                                                     | implemented; audit trigger tested                                              |
 
 Not verifiable in this environment: PostgREST query behaviour of the repository functions
 (`src/lib/repositories/equipment.ts`) — the database is tested directly with SQL under RLS, but the HTTP
 layer needs a real Supabase project (running a local PostgREST binary was not permitted here).
 
 Tests after Phase 2: 121 unit, 41 database, 71 e2e (15 viewport skips).
+
+## Phase 3 — Service collaboration (done)
+
+Migration `20261110120200_service_collaboration.sql`:
+
+- `service_requests` (per-organization reference numbers, composite foreign keys to equipment and plans,
+  plan must belong to the equipment), `service_assignments` (request-scoped external collaborators),
+  `appointment_proposals`, `service_messages` (shared / internal), `completion_records`
+  (acknowledgment, voiding, `replaces_id` correction chain), `service_events` (shared timeline).
+- All state changes run through definer functions with explicit actor checks and row locks:
+  `transition_service_request`, `propose_appointment`, `respond_appointment`, `record_completion`,
+  `acknowledge_completion`, `void_completion`, `set_replacement_status`. Clients have no write privilege on
+  status, schedule, replacement or completion columns.
+- Assignment invitations (`kind = service_assignment`) are accepted through `accept_invitation`; the Phase 1
+  placeholder `private.accept_service_assignment` is replaced.
+- Assignees read only their requests, the request's shared messages, proposals, completion records and
+  timeline, plus a reduced equipment header (`service_request_brief`, `my_service_assignments`); they cannot
+  read the organization's equipment, members, audit log or internal messages.
+- Plan due dates use only non-voided, acknowledged (or acknowledgment-free) completions with an outcome other
+  than "not completed".
+
+| Module                                                                                    | Status                                                            |
+| ----------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| Service requests: list, filters, create (from list or equipment), edit with version check | implemented; database rules tested; UI needs a configured project |
+| Status flow novo → … → zakljuceno / preklicano with role rules                            | implemented and tested (database)                                 |
+| External technicians via invitation, revocation, technician area `/app/servisne-naloge`   | implemented and tested (database)                                 |
+| Appointment proposals and confirmation (Ljubljana time, DST gaps rejected)                | implemented and tested (database, unit)                           |
+| Shared and internal messages                                                              | implemented and tested (database)                                 |
+| Completion records: acknowledgment, rejection, voiding, correction, plan recompute        | implemented and tested (database)                                 |
+| Replacement equipment states                                                              | implemented and tested (database)                                 |
+| Service history on the equipment page, shared timeline, overview counts                   | implemented; queries not yet run against PostgREST                |
+
+Tests after Phase 3: 129 unit, 56 database, 79 e2e (15 viewport skips).

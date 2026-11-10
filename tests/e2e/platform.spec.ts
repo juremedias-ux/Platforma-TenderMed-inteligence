@@ -23,11 +23,27 @@ test.describe("platform without configuration", () => {
     await expect(page.getByText("Platforma ni konfigurirana")).toBeVisible();
   });
 
-  for (const path of ["pregled", "oprema", "koledar", "nastavitve", `oprema/${ORG}`, "oprema/uvoz"]) {
+  for (const path of [
+    "pregled",
+    "oprema",
+    "koledar",
+    "nastavitve",
+    `oprema/${ORG}`,
+    "oprema/uvoz",
+    "servisi",
+    `servisi/${ORG}`,
+  ]) {
     test(`/app/[org]/${path} never renders organization data without a session`, async ({ page }) => {
       await page.goto(`/app/${ORG}/${path}`);
       await expect(page.getByText(/ni konfigurirana|še ni konfigurirana/).first()).toBeVisible();
       await expect(page.getByRole("table")).toHaveCount(0);
+    });
+  }
+
+  for (const path of ["/app/servisne-naloge", `/app/servisne-naloge/${ORG}`]) {
+    test(`${path} shows the not-configured state`, async ({ page }) => {
+      await page.goto(path);
+      await expect(page.getByText("Platforma ni konfigurirana")).toBeVisible();
     });
   }
 
