@@ -4,7 +4,7 @@ import { CircleAlert, CircleCheck, LoaderCircle } from "lucide-react";
 import type { ReactNode } from "react";
 import { useFormStatus } from "react-dom";
 import { Button, type ButtonVariantProps } from "@/components/ui/button";
-import { FieldError, Input, Label } from "@/components/ui/form-controls";
+import { FieldError, Input, Label, Select, Textarea } from "@/components/ui/form-controls";
 import type { ActionState } from "@/lib/forms/action-state";
 import { cn } from "@/lib/utils/cn";
 
@@ -75,10 +75,12 @@ export function TextField({
   hint,
   maxLength,
   inputMode,
+  idPrefix = "field",
 }: {
   name: string;
   label: string;
   state: ActionState;
+  idPrefix?: string;
   type?: string;
   autoComplete?: string;
   required?: boolean;
@@ -87,9 +89,8 @@ export function TextField({
   maxLength?: number;
   inputMode?: "email" | "text" | "numeric" | "decimal";
 }) {
-  const id = `field-${name}`;
+  const id = `${idPrefix}-${name}`;
   const error = state.fieldErrors?.[name];
-  const describedBy = [error ? `${id}-error` : null, hint ? `${id}-hint` : null].filter(Boolean).join(" ") || undefined;
   return (
     <div>
       <Label htmlFor={id}>
@@ -105,10 +106,115 @@ export function TextField({
         aria-required={required || undefined}
         defaultValue={state.values?.[name] ?? defaultValue}
         aria-invalid={Boolean(error)}
-        aria-describedby={describedBy}
+        aria-describedby={describedBy(id, error, hint)}
         maxLength={maxLength}
         inputMode={inputMode}
         className="mt-1.5"
+      />
+      {hint ? (
+        <p id={`${id}-hint`} className="mt-1.5 text-[13px] text-ink-muted">
+          {hint}
+        </p>
+      ) : null}
+      <FieldError id={`${id}-error`}>{error}</FieldError>
+    </div>
+  );
+}
+
+function describedBy(id: string, error?: string, hint?: string) {
+  return [error ? `${id}-error` : null, hint ? `${id}-hint` : null].filter(Boolean).join(" ") || undefined;
+}
+
+export function SelectField({
+  name,
+  label,
+  state,
+  options,
+  defaultValue,
+  required,
+  hint,
+  placeholder,
+  idPrefix = "field",
+}: {
+  name: string;
+  label: string;
+  state: ActionState;
+  options: readonly { value: string; label: string }[];
+  defaultValue?: string;
+  required?: boolean;
+  hint?: string;
+  /** Adds an empty first option with this label. */
+  placeholder?: string;
+  idPrefix?: string;
+}) {
+  const id = `${idPrefix}-${name}`;
+  const error = state.fieldErrors?.[name];
+  return (
+    <div>
+      <Label htmlFor={id}>
+        {label}
+        {required ? <span className="sr-only"> (obvezno)</span> : null}
+      </Label>
+      <Select
+        id={id}
+        name={name}
+        required={required}
+        aria-required={required || undefined}
+        defaultValue={state.values?.[name] ?? defaultValue ?? ""}
+        aria-invalid={Boolean(error)}
+        aria-describedby={describedBy(id, error, hint)}
+        className="mt-1.5 h-11"
+      >
+        {placeholder !== undefined ? <option value="">{placeholder}</option> : null}
+        {options.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </Select>
+      {hint ? (
+        <p id={`${id}-hint`} className="mt-1.5 text-[13px] text-ink-muted">
+          {hint}
+        </p>
+      ) : null}
+      <FieldError id={`${id}-error`}>{error}</FieldError>
+    </div>
+  );
+}
+
+export function TextareaField({
+  name,
+  label,
+  state,
+  defaultValue,
+  maxLength,
+  hint,
+  rows = 4,
+  idPrefix = "field",
+}: {
+  name: string;
+  label: string;
+  state: ActionState;
+  defaultValue?: string;
+  maxLength?: number;
+  hint?: string;
+  rows?: number;
+  idPrefix?: string;
+}) {
+  const id = `${idPrefix}-${name}`;
+  const error = state.fieldErrors?.[name];
+  return (
+    <div>
+      <Label htmlFor={id}>{label}</Label>
+      <Textarea
+        id={id}
+        name={name}
+        rows={rows}
+        maxLength={maxLength}
+        defaultValue={state.values?.[name] ?? defaultValue}
+        aria-invalid={Boolean(error)}
+        aria-describedby={describedBy(id, error, hint)}
+        className="mt-1.5 min-h-0"
       />
       {hint ? (
         <p id={`${id}-hint`} className="mt-1.5 text-[13px] text-ink-muted">

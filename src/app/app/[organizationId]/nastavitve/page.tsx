@@ -8,6 +8,7 @@ import {
   RemoveMemberButton,
   RevokeInvitationButton,
 } from "@/components/app/settings/settings-forms";
+import { CreateLocationForm, LocationRow } from "@/components/app/equipment/location-forms";
 import { LoadError, NoAccess } from "@/components/app/state-message";
 import {
   assignableRoles,
@@ -38,7 +39,7 @@ async function Settings({ params }: { params: PageProps<"/app/[organizationId]/n
   if (!context) return <NoAccess />;
   const { supabase, role, organization, user } = context;
 
-  const [members, invitations] = await Promise.all([
+  const [members, invitations, locations] = await Promise.all([
     supabase
       .from("organization_memberships")
       .select("user_id, role, created_at, profiles!organization_memberships_user_id_fkey(full_name, email)")
@@ -55,12 +56,18 @@ async function Settings({ params }: { params: PageProps<"/app/[organizationId]/n
           .gt("expires_at", new Date().toISOString())
           .order("created_at", { ascending: false })
       : Promise.resolve({ data: [], error: null }),
+    supabase
+      .from("locations")
+      .select("id, name, version, archived_at")
+      .eq("organization_id", organizationId)
+      .order("archived_at", { ascending: true, nullsFirst: true })
+      .order("name"),
   ]);
-  if (members.error || invitations.error) return <LoadError />;
+  if (members.error || invitations.error || locations.error) return <LoadError />;
 
   return (
     <>
-      <PageHeader title="Nastavitve" description="Organizacija, člani in povabila." />
+      <PageHeader title="Nastavitve" description="Organizacija, člani, povabila in lokacije." />
       <div className="space-y-6">
         <Card title="Organizacija">
           {can(role, "org.settings") ? (
@@ -144,6 +151,35 @@ async function Settings({ params }: { params: PageProps<"/app/[organizationId]/n
               </tbody>
             </table>
           </div>
+        </Card>
+
+        <Card
+          title="Lokacije"
+          description="Oddelki ali prostori, kjer je oprema. Arhivirane lokacije ostanejo pri obstoječi opremi."
+        >
+          {can(role, "equipment.manage") ? (
+            <div className="space-y-2">
+              <CreateLocationForm organizationId={organizationId} />
+              {(locations.data ?? []).length > 0 ? (
+                <div className="divide-y divide-line border-t border-line">
+                  {(locations.data ?? []).map((location) => (
+                    <LocationRow key={location.id} organizationId={organizationId} location={location} />
+                  ))}
+                </div>
+              ) : null}
+            </div>
+          ) : (locations.data ?? []).length > 0 ? (
+            <ul className="space-y-1 text-sm">
+              {(locations.data ?? []).map((location) => (
+                <li key={location.id}>
+                  {location.name}
+                  {location.archived_at ? <span className="text-ink-muted"> (arhivirana)</span> : null}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-sm text-ink-muted">Ni vpisanih lokacij.</p>
+          )}
         </Card>
 
         {can(role, "invitations.manage") ? (
