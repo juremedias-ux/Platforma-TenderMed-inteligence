@@ -11,7 +11,13 @@ export default function robots(): MetadataRoute.Robots {
     return { rules: [{ userAgent: "*", disallow: "/" }] };
   }
   return {
-    rules: [{ userAgent: "*", allow: "/", disallow: ["/api/"] }],
+    rules: [
+      {
+        userAgent: "*",
+        allow: "/",
+        disallow: ["/api/", "/app", "/prijava", "/povabilo/", "/pozabljeno-geslo", "/ponastavitev-gesla"],
+      },
+    ],
     sitemap: `${siteConfig.url}/sitemap.xml`,
   };
 }

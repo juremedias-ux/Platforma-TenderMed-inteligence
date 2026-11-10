@@ -33,6 +33,29 @@ export function getSupabaseServerConfig(): SupabaseServerConfig | null {
   return { url, secretKey };
 }
 
+export interface SupabasePublicConfig {
+  url: string;
+  publishableKey: string;
+}
+
+/**
+ * URL and publishable (public) key for user-scoped clients. These clients act
+ * with the signed-in user's session, so RLS applies to every query.
+ * NEXT_PUBLIC_SUPABASE_ANON_KEY is accepted as the legacy name.
+ */
+export function getSupabasePublicConfig(): SupabasePublicConfig | null {
+  const url = readNonEmpty("NEXT_PUBLIC_SUPABASE_URL");
+  const publishableKey =
+    readNonEmpty("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY") ?? readNonEmpty("NEXT_PUBLIC_SUPABASE_ANON_KEY");
+  if (!url || !publishableKey) return null;
+  return { url, publishableKey };
+}
+
+/** Secret used by the scheduler to call /api/cron/* (Vercel sends it as a bearer token). */
+export function getCronSecret(): string | null {
+  return readNonEmpty("CRON_SECRET");
+}
+
 export function getTurnstileSecret(): string | null {
   return readNonEmpty("TURNSTILE_SECRET_KEY");
 }
@@ -59,4 +82,32 @@ export function getExtraAllowedOrigins(): string[] {
         return [];
       }
     });
+}
+
+export interface EmailConfig {
+  apiKey: string;
+  /** Verified sender, e.g. "TenderMed <obvestila@vasa-domena.si>". */
+  from: string;
+}
+
+/** E-mail provider (Resend). Null until a sending domain is verified and both values are set. */
+export function getEmailConfig(): EmailConfig | null {
+  const apiKey = readNonEmpty("RESEND_API_KEY");
+  const from = readNonEmpty("EMAIL_FROM");
+  return apiKey && from ? { apiKey, from } : null;
+}
+
+/** Absolute origin for links in e-mails (NEXT_PUBLIC_SITE_URL, else the Vercel production domain). */
+export function getPublicAppUrl(): string | null {
+  const configured = readNonEmpty("NEXT_PUBLIC_SITE_URL");
+  const candidate =
+    configured ??
+    (readNonEmpty("VERCEL_PROJECT_PRODUCTION_URL") ? `https://${readNonEmpty("VERCEL_PROJECT_PRODUCTION_URL")}` : null);
+  if (!candidate) return null;
+  try {
+    const url = new URL(candidate);
+    return url.protocol === "https:" || url.protocol === "http:" ? url.origin : null;
+  } catch {
+    return null;
+  }
 }
