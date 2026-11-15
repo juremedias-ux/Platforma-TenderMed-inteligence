@@ -194,3 +194,43 @@ App:
 The catalog contains no sample products: it fills only with products entered by approved suppliers.
 
 Tests after Phase 6: 144 unit, 77 database, 91 e2e (15 viewport skips).
+
+## Phase 7 — Hardening and documentation (done)
+
+- Migration `20261110120600_hardening.sql`: removes the anonymous role's EXECUTE on `accept_invitation` (granted
+  by Supabase default privileges; found by the new security sweep) and creates profiles for accounts that
+  existed before the platform migrations.
+- `tests/db/security.test.ts`: RLS enabled on every public table, `search_path` pinned on every SECURITY DEFINER
+  function, no anonymous table access and only `get_invitation_preview` callable anonymously, service-role-only
+  functions refused to signed-in users, cross-organization sweep over every table with `organization_id`, and a
+  pilot journey from operator bootstrap to an acknowledged completion and a reminder e-mail in the outbox.
+- Accessibility: axe-core checks (WCAG 2.1 A/AA, serious and critical findings) for the auth pages and the
+  unconfigured application page; dev dependency `@axe-core/playwright` 4.10.2.
+- Documentation: `permission-matrix.md`, `security-model.md`, `pilot-runbook.md` (Slovenian), README.
+
+## Final status per module
+
+| #   | Module                                          | Status                                                                                                      |
+| --- | ----------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| 1   | Authentication and recovery                     | implemented, awaiting configuration (Auth URLs, publishable key; recovery e-mail via Supabase default SMTP) |
+| 2   | Invitation-only onboarding                      | implemented and tested (database); manual delivery of links until e-mail is configured                      |
+| 3   | Organizations and memberships                   | implemented and tested                                                                                      |
+| 4   | Roles and request-scoped external collaborators | implemented and tested                                                                                      |
+| 5   | Equipment register                              | implemented and tested (database); UI not exercised against a live backend                                  |
+| 6   | Maintenance schedules (3 modes)                 | implemented and tested                                                                                      |
+| 7   | Service requests and coordination               | implemented and tested (database)                                                                           |
+| 8   | Service history and completion records          | implemented and tested (database); planned cost field not implemented                                       |
+| 9   | Private documents                               | implemented and tested (database); upload/download awaiting configuration (not run against real Storage)    |
+| 10  | In-app notifications                            | implemented and tested (database)                                                                           |
+| 11  | Scheduled e-mail reminders                      | implemented and tested (database, unit); awaiting configuration (sending domain, `CRON_SECRET`)             |
+| 12  | Catalog (approved suppliers only)               | implemented and tested (database); empty until suppliers publish                                            |
+| 13  | Deterministic recommendations                   | implemented and tested (unit)                                                                               |
+| 14  | CSV import / export                             | implemented and tested                                                                                      |
+| 15  | Audit records                                   | implemented and tested                                                                                      |
+| 16  | Organization and notification settings          | implemented; database rules tested                                                                          |
+
+Not implemented: generated database types (row types are written by hand in `src/lib/repositories/`), cost
+amount on completion records, malware scanning of uploads, invitation e-mails, nonce-based script CSP.
+
+Final verification (2026-11-15): lint, typecheck, Prettier, 144 unit tests, 83 database tests, migration
+verification, 101 e2e tests (15 viewport-specific skips), production build, `npm audit --omit=dev` (0).

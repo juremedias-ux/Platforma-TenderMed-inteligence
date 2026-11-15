@@ -33,9 +33,9 @@ internal document is in English.
 15. Audit records for important changes
 16. Organization and notification settings
 
-Simplifications agreed in the plan: agenda-style calendar (no drag & drop), one cost amount per completion
-record, notification preferences per category (e-mail on/off), recommendations computed on demand (feedback
-persisted).
+Simplifications agreed in the plan: agenda-style calendar (no drag & drop), notification preferences per category
+(e-mail on/off), recommendations computed on demand (feedback persisted). The planned single cost amount per
+completion record was not implemented in this release (see docs/implementation-progress.md).
 
 Out of scope: public self-registration, billing, tender scraping, automatic manufacturer discovery, AI agents,
 bid preparation, marketplace, rental payments, IoT, failure prediction, clinical decision support, patient
