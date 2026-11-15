@@ -33,6 +33,9 @@ test.describe("platform without configuration", () => {
     "servisi",
     `servisi/${ORG}`,
     "obvestila",
+    "katalog",
+    "katalog/povprasevanja",
+    "priporocila",
   ]) {
     test(`/app/[org]/${path} never renders organization data without a session`, async ({ page }) => {
       await page.goto(`/app/${ORG}/${path}`);

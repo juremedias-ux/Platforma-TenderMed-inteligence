@@ -156,3 +156,41 @@ App:
 | Daily schedule on Vercel                                                        | implemented, awaiting configuration (`CRON_SECRET` in Vercel)                          |
 
 Tests after Phase 5: 137 unit, 71 database, 85 e2e (15 viewport skips).
+
+## Phase 6 — Catalog and recommendations (done)
+
+Migration `20261110120500_catalog.sql`:
+
+- `catalog_products`, `catalog_compatibility`, `catalog_sources` (https only). Owners and admins of
+  supplier organizations (distributor, service provider, manufacturer) approved in `supplier_approvals` can
+  write; drafts are visible only to the supplier; published products of approved suppliers are visible to
+  every user with a membership. Suspending a supplier hides its products immediately.
+- `save_catalog_product` saves a product with its compatibility list and sources in one transaction.
+- `catalog_suppliers()` exposes approved suppliers' names and declared commercial relationship.
+- `catalog_private_notes` and `recommendation_feedback` (saved / dismissed / info requested / reviewed) are
+  private to the organization.
+- `supplier_inquiries` with an explicit `shared_snapshot`; the supplier (owner/admin) answers, the requester
+  can only close; notifications and audit entries for both organizations.
+- `private.audit_row` also records rows owned through `supplier_organization_id`.
+
+App:
+
+- `/app/[org]/katalog`: published catalog with filters, supplier disclosure, sources, private notes, inquiry
+  dialog; suppliers manage their own products (draft, publish, archive).
+- `/app/[org]/priporocila`: deterministic rules (compatible models, services for overdue or upcoming due
+  dates within 60 days, services for warranties ending within 90 days), reasons shown for each item,
+  feedback, inquiries with pre-selected equipment. Commercial relationships do not affect ordering.
+- `/app/[org]/katalog/povprasevanja`: received and sent inquiries.
+- `scripts/approve-supplier.mjs`: operator command to approve or suspend a supplier.
+
+| Module                                                                 | Status                                              |
+| ---------------------------------------------------------------------- | --------------------------------------------------- |
+| Catalog with approved suppliers, compatibility, sources, private notes | implemented and tested (database)                   |
+| Deterministic recommendations with explanations                        | implemented and tested (unit)                       |
+| Recommendation feedback                                                | implemented and tested (database)                   |
+| Supplier inquiries with explicit snapshot, answers, notifications      | implemented and tested (database)                   |
+| Supplier approval command                                              | implemented; runs against a configured project only |
+
+The catalog contains no sample products: it fills only with products entered by approved suppliers.
+
+Tests after Phase 6: 144 unit, 77 database, 91 e2e (15 viewport skips).
