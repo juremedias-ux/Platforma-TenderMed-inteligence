@@ -154,7 +154,7 @@ export function ProductPreview({ snapshot }: { snapshot: DemoSnapshot }) {
           </div>
         </div>
       </div>
-      <figcaption className="mt-3 text-center text-xs text-ink-muted in-[.bg-navy-950]:text-navy-300">
+      <figcaption className="mt-3 text-center text-xs text-ink-muted">
         Predogled demo vmesnika. Vsi podatki so izmišljeni in izračunani iz demonstracijskega nabora.
       </figcaption>
     </figure>

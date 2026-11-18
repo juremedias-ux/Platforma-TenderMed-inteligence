@@ -73,8 +73,8 @@ export function ScrollGallery({
             disabled={disabled}
             onClick={() => scrollByCard(direction)}
             className={cn(
-              "inline-flex size-11 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur transition-colors",
-              "hover:bg-white/20 disabled:cursor-default disabled:opacity-35 disabled:hover:bg-white/10",
+              "inline-flex size-11 items-center justify-center rounded-full bg-navy-900 text-white shadow-card transition-colors",
+              "hover:bg-navy-800 disabled:cursor-default disabled:opacity-30 disabled:hover:bg-navy-900",
             )}
           >
             <Icon className="size-5" aria-hidden="true" />

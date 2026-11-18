@@ -192,9 +192,14 @@
  * ------------------------------------------------------------------------- */
 
 @layer components {
-  /* Gradient fill for headline words. */
+  /* Gradient fill for headline words (dark enough for light backgrounds). */
   .text-gradient {
-    background-image: linear-gradient(100deg, #8fd1c2 0%, #d6efe8 38%, #ffffff 52%, #6fb9a9 100%);
+    background-image: linear-gradient(
+      100deg,
+      var(--color-accent-700) 0%,
+      var(--color-accent-500) 45%,
+      var(--color-navy-700) 100%
+    );
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
@@ -202,12 +207,12 @@
     box-decoration-break: clone;
   }
 
-  /* Slowly drifting light behind the hero. */
+  /* Slowly drifting soft colour behind the hero. */
   .hero-aura {
     background:
-      radial-gradient(60% 45% at 50% 0%, rgb(31 138 123 / 0.35), transparent 70%),
-      radial-gradient(40% 35% at 85% 30%, rgb(111 185 169 / 0.18), transparent 70%),
-      radial-gradient(45% 40% at 10% 40%, rgb(52 73 99 / 0.55), transparent 70%);
+      radial-gradient(55% 40% at 50% 0%, rgb(166 213 202 / 0.55), transparent 70%),
+      radial-gradient(40% 35% at 88% 28%, rgb(211 235 229 / 0.7), transparent 70%),
+      radial-gradient(45% 40% at 8% 42%, rgb(205 214 225 / 0.6), transparent 70%);
   }
 
   /* Pinned statement: a tall section whose child stays in view while the
@@ -230,7 +235,7 @@
     font-weight: 600;
     letter-spacing: -0.04em;
     white-space: nowrap;
-    filter: drop-shadow(0 0 28px rgb(111 185 169 / 0.45)) drop-shadow(0 0 90px rgb(31 138 123 / 0.35));
+    filter: drop-shadow(0 0 24px rgb(111 185 169 / 0.35)) drop-shadow(0 0 70px rgb(31 138 123 / 0.2));
   }
 
   /* Gallery track: horizontal scrolling with snap points and no visible scrollbar. */
@@ -304,12 +309,12 @@
   30% {
     opacity: 1;
     transform: scale(1);
-    filter: drop-shadow(0 0 28px rgb(111 185 169 / 0.5)) drop-shadow(0 0 90px rgb(31 138 123 / 0.4)) blur(0);
+    filter: drop-shadow(0 0 24px rgb(111 185 169 / 0.35)) drop-shadow(0 0 70px rgb(31 138 123 / 0.2)) blur(0);
   }
   65% {
     opacity: 1;
     transform: scale(0.97);
-    filter: drop-shadow(0 0 48px rgb(143 209 194 / 0.75)) drop-shadow(0 0 140px rgb(31 138 123 / 0.6)) blur(0);
+    filter: drop-shadow(0 0 36px rgb(111 185 169 / 0.6)) drop-shadow(0 0 110px rgb(31 138 123 / 0.35)) blur(0);
   }
   100% {
     opacity: 0;
