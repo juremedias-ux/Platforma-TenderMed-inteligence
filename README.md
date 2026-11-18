@@ -2,7 +2,12 @@
 
 Public Slovenian-language website and interactive product demonstration for **TenderMed Intelligence**, a platform under development that connects medical equipment records, service coordination, relevant product recommendations and procurement intelligence.
 
-This repository is the **first public release**: a marketing website, an interactive demo with clearly fictional data, and working inquiry forms backed by Supabase. It is **not** a production equipment-management application.
+This repository contains:
+
+- the **public website** (`/`), an interactive demo with clearly fictional data (`/demo`) and working inquiry forms backed by Supabase;
+- the **invitation-only platform for a controlled pilot** (`/app`): authentication, organizations and roles, equipment register, maintenance plans, service coordination with external technicians, completion records, private documents, notifications and reminders, a catalog of approved suppliers with explainable recommendations, CSV import/export and audit records.
+
+The platform is a pilot, not a certified production system. Its database rules are tested in PostgreSQL; authenticated journeys still have to be verified on the real Supabase project ([pilot runbook](docs/pilot-runbook.md)).
 
 > Medcore is a separate distribution business and is not an alternative name for this platform. Nothing in this repository assumes a distribution agreement, customer, partnership, certification, live tender integration or validated AI capability.
 
@@ -28,7 +33,7 @@ This repository is the **first public release**: a marketing website, an interac
 16. [Adding products and matching rules](#adding-products-and-matching-rules)
 17. [Launch checklist](#launch-checklist)
 18. [Known limitations](#known-limitations)
-19. [Future authenticated application](#future-authenticated-application)
+19. [Platform (pilot)](#platform-pilot)
 
 ---
 
@@ -63,11 +68,13 @@ The repository was empty when work started, so these defaults were chosen and ar
 - Draft privacy notice (`/zasebnost`) and terms (`/pogoji`), clearly marked as drafts and `noindex`.
 - SEO metadata, sitemap, robots, social image, icons; accessibility and responsive layouts; unit and end-to-end tests.
 
-### Explicit non-goals (prepared, not built)
+- Invitation-only platform under `/app` — see [Platform (pilot)](#platform-pilot).
 
-Authentication and invitations · persistent customer equipment registers · real service-provider collaboration · scheduled e-mail/SMS reminders · document uploads · live manufacturer feeds · AI document processing · live e-Naročanje or TED ingestion · subscriptions/payments · rental transactions · used-equipment marketplace · automatic purchasing or tender submission · e-mail notifications for inquiries.
+### Explicit non-goals (not built)
 
-No button or label in the UI implies that these exist.
+Public self-registration · SMS · live manufacturer feeds · AI document processing · live e-Naročanje or TED ingestion · subscriptions/payments · rental transactions · used-equipment marketplace · automatic purchasing or tender submission · e-mail notifications for website inquiries · patient data of any kind.
+
+No button or label in the UI implies that these exist. The public demo (`/demo`) keeps its fictional data and never reads platform data.
 
 ## Demonstrated vs. implemented
 
@@ -79,7 +86,8 @@ No button or label in the UI implies that these exist.
 | Product recommendations                                                                                        | Deterministic rules engine with explanations and commercial disclosure | Interaktivni demo                            |
 | Tender matching                                                                                                | Deterministic rules on illustrative tenders; no live sources           | Interaktivni demo (live sources: Načrtovano) |
 | Pilot / contact inquiries                                                                                      | **Implemented** – stored in Supabase when configured                   | –                                            |
-| Authentication, reminders, uploads, live integrations                                                          | Not implemented                                                        | V razvoju / Načrtovano                       |
+| Platform modules under `/app` (auth, equipment, service, documents, notifications, catalog)                    | **Implemented for the pilot**; requires configuration (runbook)        | – (not linked from the public site)          |
+| Live procurement integrations                                                                                  | Not implemented                                                        | Načrtovano                                   |
 
 ## Technical stack
 
@@ -184,17 +192,19 @@ Useful scripts:
 
 ## Environment variables
 
-| Variable                                                  | Required   | Exposure        | Purpose                                                                                                                   |
-| --------------------------------------------------------- | ---------- | --------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| `NEXT_PUBLIC_SITE_URL`                                    | For launch | Public          | Canonical origin. Enables canonical URLs, sitemap, indexing and `metadataBase`. Leave empty until the real domain exists. |
-| `NEXT_PUBLIC_SUPABASE_URL`                                | For forms  | Public          | Supabase project URL                                                                                                      |
-| `SUPABASE_SECRET_KEY`                                     | For forms  | **Server only** | Supabase secret key (`sb_secret_…`)                                                                                       |
-| `SUPABASE_SERVICE_ROLE_KEY`                               | Fallback   | **Server only** | Legacy service-role JWT, only if no secret key is available                                                               |
-| `RATE_LIMIT_HASH_SECRET`                                  | Optional   | Server only     | HMAC key for pseudonymizing IP/e-mail in rate limits (defaults to the Supabase secret)                                    |
-| `FORM_ALLOWED_ORIGINS`                                    | Optional   | Server only     | Extra origins allowed to POST forms (comma-separated)                                                                     |
-| `NEXT_PUBLIC_TURNSTILE_SITE_KEY` / `TURNSTILE_SECRET_KEY` | Optional   | Public / server | Cloudflare Turnstile. Set both or neither.                                                                                |
-| `DEMO_REFERENCE_DATE`                                     | Optional   | Server only     | Pins the demo "today" (`YYYY-MM-DD`) for screenshots                                                                      |
-| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`                    | Not used   | Public          | Reserved for a future browser/Auth integration                                                                            |
+| Variable                                                  | Required   | Exposure        | Purpose                                                                                                                                |
+| --------------------------------------------------------- | ---------- | --------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `NEXT_PUBLIC_SITE_URL`                                    | For launch | Public          | Canonical origin. Enables canonical URLs, sitemap, indexing and `metadataBase`. Leave empty until the real domain exists.              |
+| `NEXT_PUBLIC_SUPABASE_URL`                                | For forms  | Public          | Supabase project URL                                                                                                                   |
+| `SUPABASE_SECRET_KEY`                                     | For forms  | **Server only** | Supabase secret key (`sb_secret_…`)                                                                                                    |
+| `SUPABASE_SERVICE_ROLE_KEY`                               | Fallback   | **Server only** | Legacy service-role JWT, only if no secret key is available                                                                            |
+| `RATE_LIMIT_HASH_SECRET`                                  | Optional   | Server only     | HMAC key for pseudonymizing IP/e-mail in rate limits (defaults to the Supabase secret)                                                 |
+| `FORM_ALLOWED_ORIGINS`                                    | Optional   | Server only     | Extra origins allowed to POST forms (comma-separated)                                                                                  |
+| `NEXT_PUBLIC_TURNSTILE_SITE_KEY` / `TURNSTILE_SECRET_KEY` | Optional   | Public / server | Cloudflare Turnstile. Set both or neither.                                                                                             |
+| `DEMO_REFERENCE_DATE`                                     | Optional   | Server only     | Pins the demo "today" (`YYYY-MM-DD`) for screenshots                                                                                   |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`                    | Platform   | Public          | Supabase Auth sessions (SSR cookies) and user-scoped queries under RLS; `NEXT_PUBLIC_SUPABASE_ANON_KEY` is accepted as the legacy name |
+| `CRON_SECRET`                                             | Platform   | **Server only** | Bearer token Vercel Cron sends to `/api/cron/notifications`; without it the job returns `503`                                          |
+| `RESEND_API_KEY` / `EMAIL_FROM`                           | Optional   | **Server only** | E-mail delivery of notifications; leave empty until a sending domain is verified (notifications stay in-app)                           |
 
 Privileged keys are read only in `src/lib/config/server-env.ts`, which imports `server-only`; importing it from client code fails the build.
 
@@ -219,7 +229,7 @@ No Supabase project was created as part of this work. To connect one:
      npx supabase db push
      ```
 
-   - or the dashboard SQL editor: paste and run each file in `supabase/migrations/` once, in filename order (`20261108120000_inquiries.sql`, then `20261109120000_email_only_pilot_signup.sql`).
+   - or the dashboard SQL editor: paste and run each file in `supabase/migrations/` once, in filename order (`20261108120000_inquiries.sql`, `20261109120000_email_only_pilot_signup.sql`, then the platform migrations `20261110120000`–`20261110120600`; step-by-step instructions in Slovenian: [docs/pilot-runbook.md](docs/pilot-runbook.md)).
 4. **Keep the `public` schema exposed** through the Data API (the default). The route handlers call two RPC functions and insert into `contact_messages` through PostgREST using the secret key.
 5. **Verify persistence** (see [Testing → forms](#testing-the-forms)).
 
@@ -254,7 +264,8 @@ There is no admin UI in this release. Inquiries can be read by the project owner
 
 ## Security model
 
-- **Server-side writes only.** Browsers never talk to Supabase. Forms POST JSON to Next.js route handlers, which validate and then write with the secret key from a `server-only` module.
+- **Platform:** see [docs/security-model.md](docs/security-model.md) and [docs/permission-matrix.md](docs/permission-matrix.md). The rest of this section covers the public website's forms.
+- **Server-side writes only (website forms).** Browsers never talk to Supabase for the forms. Forms POST JSON to Next.js route handlers, which validate and then write with the secret key from a `server-only` module. (On the platform, the only direct browser-to-Supabase request is a document upload to a short-lived signed upload URL.)
 - **RLS enabled, no policies.** `anon` and `authenticated` have no row access. Table and function privileges are also revoked from `public`, `anon` and `authenticated`, so browsers cannot bypass the route handlers' anti-abuse controls by calling the Data API directly.
 - **Functions** are `SECURITY INVOKER` with an empty `search_path`; only `service_role` may execute them.
 - **Request pipeline** (`src/lib/forms/handle-inquiry.ts`): `Content-Type: application/json` → same-origin check (`Origin` must match the request host, `NEXT_PUBLIC_SITE_URL` or `FORM_ALLOWED_ORIGINS`) → 16 KB body cap enforced on the stream → JSON parse → honeypot → Zod validation → storage availability → optional Turnstile verification → durable rate limit (per IP: 5 / 10 min; per e-mail: 3 / hour for pilot requests, 5 / hour for contact) → persistence. Success (`201`) is returned only after the database write succeeds.
@@ -294,19 +305,28 @@ npm run build
 ./scripts/verify-migrations.sh
 ```
 
+```bash
+npm run test:db
+```
+
+`npm run test:db` starts a throwaway PostgreSQL 16 cluster, applies an emulation of Supabase's roles, `auth` and `storage` schemas plus all migrations, and runs `tests/db/**` (RLS, cross-organization isolation, workflows, outbox concurrency, a security sweep and a pilot journey). It needs PostgreSQL server binaries on the machine.
+
 Playwright uses the preinstalled Chromium in this development environment. On a new machine, install browsers once with `npx playwright install chromium`.
 
 ### What is covered
 
-| Area            | Tests                                                                                                                                                                                                                                                                                                                                               |
-| --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Dates           | Month-end clamping, leap years (29 Feb), month/year transitions, DST-safe differences, Ljubljana calendar date, Slovenian formatting and plural forms (`tests/unit/dates.test.ts`)                                                                                                                                                                  |
-| Demo dataset    | Overview counts stable for every reference date over 800 days, referential integrity, everything marked fictional (`demo-dataset.test.ts`)                                                                                                                                                                                                          |
-| Demo state      | Create/propose/confirm/close requests, completion recorded separately, invalid dates rejected, reset, filtering (`demo-state.test.ts`)                                                                                                                                                                                                              |
-| Recommendations | Explanations, unknown compatibility stays unknown, missing evidence not converted to a match, replacement wording and safety caveat, no scores, commercial relationship has no effect on labels/order, sponsored incompatible product stays incompatible (`recommendations.test.ts`)                                                                |
-| Tenders         | Satisfied / not satisfied / evidence missing / human review; missing evidence stays unresolved (`tenders.test.ts`)                                                                                                                                                                                                                                  |
-| Forms (server)  | Validation, normalization, unknown fields ignored, 503 without configuration, 500 on persistence failure without PII in logs, honeypot, rate limits with `Retry-After`, hashed identifiers, origin, content type, body size, Turnstile (`inquiry-handler.test.ts`, `validation.test.ts`)                                                            |
-| End-to-end      | Navigation to demo, deep links, mobile menu focus behavior, form validation and focus, duplicate-click protection, honest unavailable state, network error retry, contact form, API origin/method checks, demo flows, keyboard tab navigation, drawer focus return, no storage/network use by the demo, no horizontal overflow, `noindex`, 404 page |
+| Area                | Tests                                                                                                                                                                                                                                                                                                                                               |
+| ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Dates               | Month-end clamping, leap years (29 Feb), month/year transitions, DST-safe differences, Ljubljana calendar date, Slovenian formatting and plural forms (`tests/unit/dates.test.ts`)                                                                                                                                                                  |
+| Demo dataset        | Overview counts stable for every reference date over 800 days, referential integrity, everything marked fictional (`demo-dataset.test.ts`)                                                                                                                                                                                                          |
+| Demo state          | Create/propose/confirm/close requests, completion recorded separately, invalid dates rejected, reset, filtering (`demo-state.test.ts`)                                                                                                                                                                                                              |
+| Recommendations     | Explanations, unknown compatibility stays unknown, missing evidence not converted to a match, replacement wording and safety caveat, no scores, commercial relationship has no effect on labels/order, sponsored incompatible product stays incompatible (`recommendations.test.ts`)                                                                |
+| Tenders             | Satisfied / not satisfied / evidence missing / human review; missing evidence stays unresolved (`tenders.test.ts`)                                                                                                                                                                                                                                  |
+| Forms (server)      | Validation, normalization, unknown fields ignored, 503 without configuration, 500 on persistence failure without PII in logs, honeypot, rate limits with `Retry-After`, hashed identifiers, origin, content type, body size, Turnstile (`inquiry-handler.test.ts`, `validation.test.ts`)                                                            |
+| Platform (database) | Roles and invitations, last-owner rule, equipment and plans (SQL/TypeScript scheduling parity), CSV import rollback, service workflow with external technicians, documents and storage policies, notifications and outbox, catalog and inquiries, structural security checks, cross-organization sweep (`tests/db/`)                                |
+| Platform (unit)     | Permissions, safe redirects, tokens, DST handling, scheduling, CSV parsing and formula neutralization, service transitions, file signatures, e-mail adapter and rendering, cron authorization, recommendation rules (`tests/unit/`)                                                                                                                 |
+| Platform (e2e)      | Unauthenticated access to every platform route, private cache headers, closed export/download/cron endpoints, axe accessibility checks of auth pages (`tests/e2e/platform.spec.ts`, `accessibility.spec.ts`)                                                                                                                                        |
+| End-to-end          | Navigation to demo, deep links, mobile menu focus behavior, form validation and focus, duplicate-click protection, honest unavailable state, network error retry, contact form, API origin/method checks, demo flows, keyboard tab navigation, drawer focus return, no storage/network use by the demo, no horizontal overflow, `noindex`, 404 page |
 
 ### Testing the forms
 
@@ -382,24 +402,30 @@ When the privacy notice changes, bump `privacyNoticeVersion` in `src/lib/config/
 
 ## Launch checklist
 
-| Item                                                                         | Status                                                                  | Where / action                                                                                                           |
-| ---------------------------------------------------------------------------- | ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| Real domain                                                                  | Missing                                                                 | Configure in Vercel; set `NEXT_PUBLIC_SITE_URL`                                                                          |
-| Legal operator details (name, address, registration number, privacy contact) | Missing                                                                 | `siteConfig.legalOperator`; then review `/zasebnost` and `/pogoji`                                                       |
-| Public contact details (e-mail, phone, address)                              | Missing (hidden until set)                                              | `siteConfig.contact`                                                                                                     |
-| Optional Medcore link                                                        | Not set                                                                 | `siteConfig.medcoreUrl`                                                                                                  |
-| Social links                                                                 | Not set                                                                 | `siteConfig.social`                                                                                                      |
-| Privacy notice and terms approved by the operator / legal counsel            | Drafts only                                                             | Remove the draft banner and `noindex` from both pages after approval; add them to `sitemap.ts` if they should be indexed |
-| Legal basis, retention period and processor contracts (Vercel, Supabase)     | Missing                                                                 | Privacy notice sections 4–6                                                                                              |
-| Database region and hosting region                                           | Not decided                                                             | Supabase project settings; Vercel function region; document in privacy notice                                            |
-| Inquiry retention and deletion procedure                                     | Not defined                                                             | Define; optionally automate with a scheduled SQL job                                                                     |
-| Rate-limit retention                                                         | Implemented (≈24 h, opportunistic)                                      | Optional `pg_cron` job (see above)                                                                                       |
-| Anti-abuse configuration                                                     | Honeypot, origin, body cap, validation, durable rate limits implemented | Decide whether to enable Turnstile; if enabled, document it in the privacy notice                                        |
-| Verified form persistence                                                    | Not verified against a live project (no credentials available)          | Apply migration, set env vars, submit both forms, confirm rows                                                           |
-| Production environment variables                                             | Not set                                                                 | Vercel → Production                                                                                                      |
-| Inquiry notification (e-mail)                                                | Not implemented                                                         | Optional integration; do not claim notifications until implemented and tested                                            |
-| Response-time promise                                                        | None shown                                                              | `siteConfig.inquiryResponseTimeText` if one is agreed                                                                    |
-| Optional nonce-based CSP                                                     | Not enabled                                                             | Consider via `proxy.ts` if dynamic rendering is acceptable                                                               |
+| Item                                                                                                           | Status                                                                  | Where / action                                                                                                           |
+| -------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| Real domain                                                                                                    | Missing                                                                 | Configure in Vercel; set `NEXT_PUBLIC_SITE_URL`                                                                          |
+| Legal operator details (name, address, registration number, privacy contact)                                   | Missing                                                                 | `siteConfig.legalOperator`; then review `/zasebnost` and `/pogoji`                                                       |
+| Public contact details (e-mail, phone, address)                                                                | Missing (hidden until set)                                              | `siteConfig.contact`                                                                                                     |
+| Optional Medcore link                                                                                          | Not set                                                                 | `siteConfig.medcoreUrl`                                                                                                  |
+| Social links                                                                                                   | Not set                                                                 | `siteConfig.social`                                                                                                      |
+| Privacy notice and terms approved by the operator / legal counsel                                              | Drafts only                                                             | Remove the draft banner and `noindex` from both pages after approval; add them to `sitemap.ts` if they should be indexed |
+| Legal basis, retention period and processor contracts (Vercel, Supabase)                                       | Missing                                                                 | Privacy notice sections 4–6                                                                                              |
+| Database region and hosting region                                                                             | Not decided                                                             | Supabase project settings; Vercel function region; document in privacy notice                                            |
+| Inquiry retention and deletion procedure                                                                       | Not defined                                                             | Define; optionally automate with a scheduled SQL job                                                                     |
+| Rate-limit retention                                                                                           | Implemented (≈24 h, opportunistic)                                      | Optional `pg_cron` job (see above)                                                                                       |
+| Anti-abuse configuration                                                                                       | Honeypot, origin, body cap, validation, durable rate limits implemented | Decide whether to enable Turnstile; if enabled, document it in the privacy notice                                        |
+| Verified form persistence                                                                                      | Not verified against a live project (no credentials available)          | Apply migration, set env vars, submit both forms, confirm rows                                                           |
+| Production environment variables                                                                               | Not set                                                                 | Vercel → Production                                                                                                      |
+| Inquiry notification (e-mail)                                                                                  | Not implemented                                                         | Optional integration; do not claim notifications until implemented and tested                                            |
+| Response-time promise                                                                                          | None shown                                                              | `siteConfig.inquiryResponseTimeText` if one is agreed                                                                    |
+| Optional nonce-based CSP                                                                                       | Not enabled                                                             | Consider via `proxy.ts` if dynamic rendering is acceptable                                                               |
+| Platform migrations applied to Supabase                                                                        | Not applied (requires the owner's authorization)                        | `docs/pilot-runbook.md`, step 1                                                                                          |
+| Supabase Auth: Site URL, redirect URL, public sign-ups disabled                                                | Not set                                                                 | Runbook step 2                                                                                                           |
+| Platform environment variables (`NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `NEXT_PUBLIC_SITE_URL`, `CRON_SECRET`) | Not set                                                                 | Runbook step 3                                                                                                           |
+| Rotate the Supabase secret key shown earlier in a screenshot                                                   | Owner decided to keep it during testing                                 | Runbook step 3                                                                                                           |
+| E-mail sending domain (Resend) and custom SMTP for password recovery                                           | Not configured                                                          | Runbook step 8 / section 2                                                                                               |
+| Manual acceptance test of authenticated journeys on the real project                                           | Not done                                                                | Runbook step 9                                                                                                           |
 
 ## Known limitations
 
@@ -409,35 +435,34 @@ When the privacy notice changes, bump `privacyNoticeVersion` in `src/lib/config/
 - The demo is desktop-first in density; on phones it switches to cards and a scrollable tab strip.
 - `npm audit` reports moderate advisories in development-only tooling (transitive `minimatch` via `typescript-eslint`); they do not affect the production bundle.
 - When the homepage is cached, its preview may be up to one day behind the current date (relative statuses are unaffected).
+- Homepage scroll effects (pinned statement, reveals, tilting preview) use CSS scroll-driven animations (`animation-timeline`, defined in `src/app/globals.css` under "Homepage motion"). Browsers without support and visitors with reduced motion get the same content fully visible and static (`tests/e2e/homepage-motion.spec.ts`).
+- Platform: the HTTP layer (PostgREST, Supabase Auth, Storage) and the authenticated UI were not exercised in the development environment; see "Known limitations" in [docs/security-model.md](docs/security-model.md) and the manual acceptance checklist in the runbook.
 
-## Future authenticated application
+## Platform (pilot)
 
-The path from this demonstration to a product is documented here; none of it is implemented.
+Invitation-only application under `/app`, in the same Next.js project and Supabase database as the website.
 
-### Access model
+| Area                                                        | Where                                                              |
+| ----------------------------------------------------------- | ------------------------------------------------------------------ |
+| Plan and decisions                                          | [docs/platform-plan.md](docs/platform-plan.md)                     |
+| Status per module and per phase                             | [docs/implementation-progress.md](docs/implementation-progress.md) |
+| Roles and enforcement points                                | [docs/permission-matrix.md](docs/permission-matrix.md)             |
+| Security model and known limitations                        | [docs/security-model.md](docs/security-model.md)                   |
+| Setup, first organization, acceptance checklist (Slovenian) | [docs/pilot-runbook.md](docs/pilot-runbook.md)                     |
 
-| Role                           | Intended access                                                                                                |
-| ------------------------------ | -------------------------------------------------------------------------------------------------------------- |
-| Organization administrator     | Manages members, roles, partner access grants and organization settings                                        |
-| Equipment manager              | Maintains equipment, plans, documents and service requests for the organization                                |
-| Authorized service partner     | Sees only equipment and requests explicitly assigned to it, for the assigned purpose (e.g. performing service) |
-| Distributor with scoped access | Sees only data the organization has explicitly shared for a defined purpose and period; no general visibility  |
+Routes: `/prijava`, `/pozabljeno-geslo`, `/ponastavitev-gesla`, `/povabilo/[token]`, `/auth/callback`, `/app` (organization choice), `/app/[organizationId]/{pregled,oprema,oprema/[equipmentId],oprema/uvoz,servisi,servisi/[requestId],koledar,katalog,katalog/povprasevanja,priporocila,obvestila,nastavitve}`, `/app/servisne-naloge` and `/app/servisne-naloge/[requestId]` (external technicians), `/app/dokumenti/[documentId]` (download), `/api/cron/notifications` (daily job).
 
-An `organizationId` column alone does **not** provide tenant isolation. Isolation requires Supabase Auth, membership tables and RLS policies bound to verified membership (`auth.uid()`), plus server-side checks for every privileged operation.
+Code layout:
 
-### Architecture steps
-
-1. **Auth and organizations:** Supabase Auth, `organizations`, `memberships` (role), invitations with expiring tokens; RLS on every organization-scoped table.
-2. **Equipment register:** persist the domain models in `src/types/domain.ts` with `organization_id`; repository interfaces in `src/lib/repositories/` get Supabase implementations; import from spreadsheets.
-3. **Partner assignments:** `access_grants` (grantee organization, scope, purpose, validity); service delivery separated from commercial prospecting; no cross-organization access by default.
-4. **Private documents:** Supabase Storage private buckets, signed URLs, metadata in tables, virus scanning, retention.
-5. **Audit history:** append-only `audit_events` for service-event changes, access grants and exports.
-6. **Reminders:** separate due-date calculation (pure functions already in `src/features/equipment/maintenance.ts`) from delivery; a scheduled job writes `notification_jobs`, a worker delivers with retries and idempotency keys, delivery history is stored, time zone `Europe/Ljubljana`. An in-app notice is never presented as a sent e-mail.
-7. **Product data:** manufacturer/distributor relationships, document verification workflow, verification status shown to users.
-8. **Explainable matching:** keep `MatchingEngine`; any model-assisted engine must return the same explanation structure, cite sources, keep unknowns unknown and require human review.
-9. **Procurement sources:** an adapter interface per source (not a fake connector); store source URL, retrieval date, notice and attachment references and versions; handle changed notices; review each source's terms of use before ingesting (an openly published source does not automatically permit unrestricted scraping or reuse); a person confirms any eligibility conclusion; no unattended bid submission.
-10. **Data rights:** export, retention and deletion procedures; processor contracts and provider review; controls against sharing confidential data across organizations.
-
-### Privacy requirements for the future application (not yet implemented)
-
-Organization-level access control · explicit partner-sharing permissions · separation of service delivery and commercial prospecting · audit history · data export · retention and deletion procedures · private document storage · contracts and provider review · controls against cross-organization sharing · human review of product and tender recommendations.
+```text
+supabase/migrations/2026111012*.sql   Platform schema, RLS, triggers and database functions
+src/proxy.ts                          Session refresh only (not authorization)
+src/lib/auth/                         Session, permission matrix, tokens, safe redirects
+src/lib/repositories/                 Queries with the caller's client (RLS applies)
+src/lib/maintenance/schedule.ts       Due-date rules (mirrors private.compute_next_due)
+src/lib/recommendations/engine.ts     Deterministic recommendation rules
+src/lib/notifications/                Outbox processing and the Resend adapter
+src/app/app/                          Platform pages, Server Actions and route handlers
+scripts/bootstrap-organization.mjs    Operator: first organization and owner invitation
+scripts/approve-supplier.mjs          Operator: approve or suspend a catalog supplier
+```

@@ -42,7 +42,7 @@ export function Section({
       <Container>
         <div
           className={cn(
-            "flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between",
+            "motion-reveal flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between",
             align === "center" && "items-center text-center lg:flex-col lg:items-center",
           )}
         >
@@ -79,7 +79,7 @@ export function Section({
           </div>
           {headerAside}
         </div>
-        <div className="mt-12 sm:mt-14">{children}</div>
+        <div className="motion-reveal-block mt-12 sm:mt-14">{children}</div>
       </Container>
     </section>
   );

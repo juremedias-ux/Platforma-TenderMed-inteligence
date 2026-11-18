@@ -1,38 +1,59 @@
 import { Info } from "lucide-react";
-import { Section } from "@/components/ui/section";
+import type { CSSProperties } from "react";
+import { Container } from "@/components/ui/container";
 import { institutions } from "@/data/marketing/home";
 import { getMarketingIcon } from "./icons";
 
+const shift = (index: number) => ({ "--reveal-shift": `${index * 4}%` }) as CSSProperties;
+
 export function InstitutionsSection() {
   return (
-    <Section
+    <section
       id="za-ustanove"
-      eyebrow={institutions.eyebrow}
-      title={institutions.title}
-      intro={institutions.intro}
-      tone="surface"
+      aria-labelledby="za-ustanove-naslov"
+      className="relative overflow-x-clip border-y border-line bg-surface py-24 text-ink sm:py-32"
     >
-      <ol className="grid gap-x-8 gap-y-10 md:grid-cols-2 xl:grid-cols-4">
-        {institutions.benefits.map((benefit, index) => {
-          const Icon = getMarketingIcon(benefit.icon);
-          return (
-            <li key={benefit.title} className="border-t border-line pt-6">
-              <div className="flex items-center justify-between gap-3">
-                <span className="inline-flex size-12 items-center justify-center rounded-lg border border-accent-200 bg-accent-50 text-accent-700">
-                  <Icon className="size-5" aria-hidden="true" />
+      <Container>
+        <div className="max-w-3xl">
+          <p className="motion-reveal text-xs font-semibold tracking-[0.18em] text-accent-700 uppercase">
+            {institutions.eyebrow}
+          </p>
+          <h2
+            id="za-ustanove-naslov"
+            className="motion-reveal mt-4 font-display text-4xl leading-[1.05] font-semibold tracking-[-0.03em] text-balance text-ink sm:text-5xl lg:text-6xl"
+            style={shift(1)}
+          >
+            {institutions.title}
+          </h2>
+          <p className="motion-reveal mt-6 text-lg leading-relaxed text-pretty text-ink-soft" style={shift(2)}>
+            {institutions.intro}
+          </p>
+        </div>
+        <ol className="mt-16 grid gap-x-10 gap-y-14 md:grid-cols-2 xl:grid-cols-4">
+          {institutions.benefits.map((benefit, index) => {
+            const Icon = getMarketingIcon(benefit.icon);
+            return (
+              <li key={benefit.title} className="motion-reveal border-t border-line pt-6" style={shift(index)}>
+                <span
+                  aria-hidden="true"
+                  className="motion-zoom text-gradient block origin-left font-display text-7xl leading-none font-semibold tracking-[-0.04em]"
+                >
+                  0{index + 1}
                 </span>
-                <span className="font-mono text-xs text-ink-muted">0{index + 1}</span>
-              </div>
-              <h3 className="mt-5 font-display text-xl font-semibold tracking-[-0.01em] text-ink">{benefit.title}</h3>
-              <p className="mt-2 text-[15px] leading-relaxed text-ink-soft">{benefit.text}</p>
-            </li>
-          );
-        })}
-      </ol>
-      <p className="mt-12 flex max-w-3xl items-start gap-2.5 rounded-lg border border-line bg-subtle px-4 py-3.5 text-sm leading-relaxed text-ink-soft">
-        <Info className="mt-0.5 size-4 shrink-0 text-accent-700" aria-hidden="true" />
-        {institutions.note}
-      </p>
-    </Section>
+                <h3 className="mt-6 flex items-start gap-2.5 font-display text-xl font-semibold tracking-[-0.01em]">
+                  <Icon className="mt-1 size-5 shrink-0 text-accent-700" aria-hidden="true" />
+                  {benefit.title}
+                </h3>
+                <p className="mt-2 text-[15px] leading-relaxed text-ink-soft">{benefit.text}</p>
+              </li>
+            );
+          })}
+        </ol>
+        <p className="motion-reveal mt-16 flex max-w-3xl items-start gap-2.5 rounded-2xl border border-line bg-subtle px-5 py-4 text-sm leading-relaxed text-ink-soft">
+          <Info className="mt-0.5 size-4 shrink-0 text-accent-700" aria-hidden="true" />
+          {institutions.note}
+        </p>
+      </Container>
+    </section>
   );
 }

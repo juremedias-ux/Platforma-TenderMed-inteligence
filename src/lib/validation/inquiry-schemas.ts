@@ -44,7 +44,7 @@ const fullName = z
       .refine((v) => !CONTROL_CHARACTERS.test(v), { error: "Ime vsebuje nedovoljene znake." }),
   );
 
-const email = z
+export const emailSchema = z
   .string({ error: "Vpišite e-poštni naslov." })
   .transform(normalizeEmail)
   .pipe(
@@ -74,12 +74,12 @@ function message(options: { min: number; max: number; requiredError?: string }) 
 
 /** Pilot sign-up: only an e-mail address is collected. */
 export const demoRequestSchema = z.object({
-  email,
+  email: emailSchema,
 });
 
 export const contactMessageSchema = z.object({
   fullName,
-  email,
+  email: emailSchema,
   message: message({
     min: LIMITS.contactMessageMin,
     max: LIMITS.contactMessageMax,

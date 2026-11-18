@@ -8,7 +8,7 @@ export function PilotSection() {
     <section id="pilot" aria-labelledby="pilot-naslov" className="py-20 sm:py-24 lg:py-28">
       <Container>
         <div className="grid gap-10 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] lg:gap-16">
-          <div>
+          <div className="motion-reveal-block">
             <p className="mb-4 text-xs font-semibold uppercase tracking-[0.14em] text-accent-700">{pilot.eyebrow}</p>
             <h2
               id="pilot-naslov"
@@ -29,7 +29,7 @@ export function PilotSection() {
               </ul>
             </div>
           </div>
-          <div className="self-start rounded-2xl border border-line bg-surface p-5 shadow-raised sm:p-8">
+          <div className="motion-reveal-block self-start rounded-2xl border border-line bg-surface p-5 shadow-raised sm:p-8">
             <h3 className="mb-5 font-display text-xl font-semibold text-ink">Prijava interesa za pilot</h3>
             <PilotSignupForm />
           </div>

@@ -35,7 +35,17 @@ const nextConfig: NextConfig = {
     },
   },
   async headers() {
-    return [{ source: "/:path*", headers: securityHeaders }];
+    // Private application and auth pages must never be stored by shared caches.
+    const privateHeaders = [{ key: "Cache-Control", value: "private, no-store" }];
+    return [
+      { source: "/:path*", headers: securityHeaders },
+      { source: "/app/:path*", headers: privateHeaders },
+      { source: "/app", headers: privateHeaders },
+      { source: "/prijava", headers: privateHeaders },
+      { source: "/pozabljeno-geslo", headers: privateHeaders },
+      { source: "/ponastavitev-gesla", headers: privateHeaders },
+      { source: "/povabilo/:path*", headers: privateHeaders },
+    ];
   },
 };
 
