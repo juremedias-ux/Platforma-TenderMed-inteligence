@@ -9,6 +9,8 @@ import type { FeatureAvailability } from "@/lib/config/site";
 export const hero = {
   eyebrow: "Digitalno upravljanje medicinske opreme",
   title: "Vaša oprema, servisi in nove priložnosti. Na enem mestu.",
+  /** Trailing part of the title shown with the gradient fill. */
+  titleAccent: "Na enem mestu.",
   text: "Razvijamo platformo, ki povezuje evidenco medicinske opreme, načrtovanje servisov in pregled dokumentacije. Na podlagi potreb vaše ustanove bo pomagala tudi pri raziskovanju ustreznih nadgradenj in novih rešitev.",
   primaryCta: "Oglejte si demo",
   signupTitle: "Prijavite interes za pilot",
@@ -16,6 +18,8 @@ export const hero = {
 };
 
 export const problem = {
+  /** Giant word of the pinned statement before the section (decorative). */
+  statement: "Preglednost.",
   title: "Manj razpršenih evidenc. Več preglednosti.",
   intro:
     "Pri upravljanju medicinske opreme pogosto ne manjka truda, temveč skupnega pregleda. Podatki, dogovori in dokumenti so razdeljeni med ljudi, oddelke in orodja.",

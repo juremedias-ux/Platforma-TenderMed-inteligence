@@ -26,3 +26,18 @@ for (const { path, name } of pages) {
     expect(serious).toEqual([]);
   });
 }
+
+test("homepage has no serious accessibility violations (static rendering)", async ({ browser }) => {
+  // Reduced motion renders every element in its final state, so contrast is
+  // checked on what visitors read rather than on mid-animation frames.
+  const context = await browser.newContext({ reducedMotion: "reduce" });
+  const page = await context.newPage();
+  await page.goto("/");
+  await page.waitForLoadState("networkidle");
+  const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]).analyze();
+  const serious = results.violations
+    .filter((v) => v.impact === "serious" || v.impact === "critical")
+    .map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(" ")).join(", ")}`);
+  expect(serious).toEqual([]);
+  await context.close();
+});

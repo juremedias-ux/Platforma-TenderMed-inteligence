@@ -180,3 +180,214 @@
 @utility animate-scale-in {
   animation: scale-in 180ms var(--ease-calm);
 }
+
+/* ---------------------------------------------------------------------------
+ * Homepage motion
+ *
+ * Scroll-driven effects use CSS scroll timelines (animation-timeline), so they
+ * need no JavaScript and cost nothing on the main thread. Browsers without
+ * scroll timelines, and visitors who prefer reduced motion, get the same
+ * content fully visible and static. Every animation is declared only inside
+ * `prefers-reduced-motion: no-preference`.
+ * ------------------------------------------------------------------------- */
+
+@layer components {
+  /* Gradient fill for headline words. */
+  .text-gradient {
+    background-image: linear-gradient(100deg, #8fd1c2 0%, #d6efe8 38%, #ffffff 52%, #6fb9a9 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+  }
+
+  /* Slowly drifting light behind the hero. */
+  .hero-aura {
+    background:
+      radial-gradient(60% 45% at 50% 0%, rgb(31 138 123 / 0.35), transparent 70%),
+      radial-gradient(40% 35% at 85% 30%, rgb(111 185 169 / 0.18), transparent 70%),
+      radial-gradient(45% 40% at 10% 40%, rgb(52 73 99 / 0.55), transparent 70%);
+  }
+
+  /* Pinned statement: a tall section whose child stays in view while the
+     giant word scales in, glows and fades. Without scroll timelines the
+     section is a normal block with the word shown statically. */
+  .glow-scene {
+    padding-block: 6rem;
+  }
+
+  .glow-sticky {
+    display: grid;
+    place-items: center;
+  }
+
+  .glow-word {
+    font-size: clamp(3rem, 13vw, 11rem);
+    line-height: 1;
+    /* Room for descenders: background-clip: text paints only inside the box. */
+    padding-block: 0.06em 0.2em;
+    font-weight: 600;
+    letter-spacing: -0.04em;
+    white-space: nowrap;
+    filter: drop-shadow(0 0 28px rgb(111 185 169 / 0.45)) drop-shadow(0 0 90px rgb(31 138 123 / 0.35));
+  }
+
+  /* Gallery track: horizontal scrolling with snap points and no visible scrollbar. */
+  .snap-gallery {
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    overscroll-behavior-x: contain;
+  }
+  .snap-gallery::-webkit-scrollbar {
+    display: none;
+  }
+  .snap-gallery > * {
+    scroll-snap-align: start;
+  }
+}
+
+@keyframes hero-in {
+  from {
+    opacity: 0;
+    transform: translateY(28px);
+    filter: blur(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}
+
+@keyframes reveal-up {
+  from {
+    opacity: 0;
+    transform: translateY(48px);
+    filter: blur(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}
+
+@keyframes settle {
+  from {
+    opacity: 0.35;
+    transform: perspective(1600px) rotateX(24deg) scale(0.86) translateY(60px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes zoom-in {
+  from {
+    opacity: 0;
+    transform: scale(0.7);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes glow-pass {
+  0% {
+    opacity: 0;
+    transform: scale(1.4);
+    filter: drop-shadow(0 0 0 rgb(111 185 169 / 0)) blur(12px);
+  }
+  30% {
+    opacity: 1;
+    transform: scale(1);
+    filter: drop-shadow(0 0 28px rgb(111 185 169 / 0.5)) drop-shadow(0 0 90px rgb(31 138 123 / 0.4)) blur(0);
+  }
+  65% {
+    opacity: 1;
+    transform: scale(0.97);
+    filter: drop-shadow(0 0 48px rgb(143 209 194 / 0.75)) drop-shadow(0 0 140px rgb(31 138 123 / 0.6)) blur(0);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.92);
+    filter: drop-shadow(0 0 0 rgb(111 185 169 / 0)) blur(6px);
+  }
+}
+
+@keyframes aura-drift {
+  from {
+    transform: translate3d(-2%, 0, 0) scale(1);
+  }
+  to {
+    transform: translate3d(2%, 3%, 0) scale(1.08);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Load-in for the hero text (staggered with --hero-delay). */
+  .motion-hero-in {
+    animation: hero-in 1.1s cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation-delay: var(--hero-delay, 0ms);
+  }
+
+  .hero-aura {
+    animation: aura-drift 18s ease-in-out infinite alternate;
+  }
+
+  @supports (animation-timeline: view()) {
+    /* Fade, rise and sharpen as the element enters the viewport;
+       --reveal-shift staggers siblings. */
+    .motion-reveal {
+      animation: reveal-up linear both;
+      animation-timeline: view();
+      animation-range: entry calc(5% + var(--reveal-shift, 0%)) cover calc(28% + var(--reveal-shift, 0%));
+    }
+
+    /* Same effect for tall blocks: completes once the block's top has
+       moved 40 % up the viewport, independent of the block's height. */
+    .motion-reveal-block {
+      animation: reveal-up linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 40%;
+    }
+
+    /* Product window that tilts flat and grows while scrolling into view. */
+    .motion-settle {
+      animation: settle linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 42%;
+      transform-origin: 50% 0%;
+    }
+
+    .motion-zoom {
+      animation: zoom-in linear both;
+      animation-timeline: view();
+      animation-range: entry 10% cover 35%;
+    }
+
+    .glow-scene {
+      height: 200vh;
+      padding-block: 0;
+      view-timeline: --glow block;
+    }
+
+    .glow-sticky {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      height: 100svh;
+    }
+
+    .glow-word {
+      animation: glow-pass linear both;
+      animation-timeline: --glow;
+      /* From the word nearing the viewport bottom to shortly after the pin ends. */
+      animation-range: entry 45% exit 25%;
+      will-change: transform, opacity, filter;
+    }
+  }
+}

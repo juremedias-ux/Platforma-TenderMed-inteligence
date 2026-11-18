@@ -435,6 +435,7 @@ When the privacy notice changes, bump `privacyNoticeVersion` in `src/lib/config/
 - The demo is desktop-first in density; on phones it switches to cards and a scrollable tab strip.
 - `npm audit` reports moderate advisories in development-only tooling (transitive `minimatch` via `typescript-eslint`); they do not affect the production bundle.
 - When the homepage is cached, its preview may be up to one day behind the current date (relative statuses are unaffected).
+- Homepage scroll effects (pinned statement, reveals, tilting preview) use CSS scroll-driven animations (`animation-timeline`, defined in `src/app/globals.css` under "Homepage motion"). Browsers without support and visitors with reduced motion get the same content fully visible and static (`tests/e2e/homepage-motion.spec.ts`).
 - Platform: the HTTP layer (PostgREST, Supabase Auth, Storage) and the authenticated UI were not exercised in the development environment; see "Known limitations" in [docs/security-model.md](docs/security-model.md) and the manual acceptance checklist in the runbook.
 
 ## Platform (pilot)

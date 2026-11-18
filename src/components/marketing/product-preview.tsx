@@ -94,7 +94,7 @@ export function ProductPreview({ snapshot }: { snapshot: DemoSnapshot }) {
               ))}
             </dl>
 
-            <div className="grid gap-3 md:grid-cols-[1.2fr_1fr] lg:grid-cols-1">
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] lg:grid-cols-1">
               <div className="rounded-md border border-line bg-surface">
                 <p className="border-b border-line px-3 py-2 text-xs font-semibold text-ink">Prihajajoči servisi</p>
                 <ul className="divide-y divide-line">
@@ -154,7 +154,7 @@ export function ProductPreview({ snapshot }: { snapshot: DemoSnapshot }) {
           </div>
         </div>
       </div>
-      <figcaption className="mt-3 text-center text-xs text-ink-muted">
+      <figcaption className="mt-3 text-center text-xs text-ink-muted in-[.bg-navy-950]:text-navy-300">
         Predogled demo vmesnika. Vsi podatki so izmišljeni in izračunani iz demonstracijskega nabora.
       </figcaption>
     </figure>
